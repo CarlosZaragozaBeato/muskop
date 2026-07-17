@@ -1,3 +1,12 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-users.yaml
+
+  - include:
+      file: db/changelog/changes/002-create-resource.yaml
+
+  - include:
+      file: db/changelog/changes/003-create-routine.yaml
+
+  - include:
+      file: db/changelog/changes/004-create-routine-block.yaml
