@@ -7,6 +7,13 @@ databaseChangeLog:
             tableName: users
             columns:
               - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
                   name: username
                   type: VARCHAR(255)
                   constraints:

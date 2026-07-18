@@ -9,8 +9,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
-import java.awt.*;
-
 @Path("/api/v1/home")
 public class HomeResource {
 

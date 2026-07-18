@@ -15,6 +15,7 @@ public class Resource extends PanacheEntityBase {
 
     public String title;
     public String type;
+    public String category;
 
     @Column(columnDefinition = "TEXT")
     public String content;

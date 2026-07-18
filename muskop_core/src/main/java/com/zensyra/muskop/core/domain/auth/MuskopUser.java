@@ -13,9 +13,11 @@ import java.util.List;
 public class MuskopUser extends PanacheEntityBase {
 
     @Id
-    public String username;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Integer id;
 
-    // Dentro de com.tuempresa.app.domain.Usuario
+    @Column(nullable = false, unique = true)
+    public String username;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Routine> rutinas = new ArrayList<>();

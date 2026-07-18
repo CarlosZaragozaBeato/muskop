@@ -15,7 +15,9 @@ public class BlockRoutine extends PanacheEntityBase {
     public Integer minDuration;
 
     public Integer bpm;
-    public Integer display_order;
+
+    @Column(name="display_order")
+    public Integer displayOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "routine_id", nullable = false)
