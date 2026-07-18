@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-resource-category
+      author: muskop
+      changes:
+        - addColumn:
+            tableName: resource
+            columns:
+              - column:
+                  name: category
+                  type: varchar(100)
+                  constraints:
+                    nullable: true
