@@ -6,6 +6,7 @@ import {
   type EditorDocument,
   type TabLabels,
 } from '../components/tab/tabModel'
+import { translate as tr } from '../i18n/translate'
 
 // ==========================================================================
 // Exportación: texto (.txt), imagen (PNG) y PDF (vía diálogo de impresión,
@@ -45,20 +46,20 @@ export async function exportPng(doc: EditorDocument, labels: TabLabels = DEFAULT
     const img = new Image()
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve()
-      img.onerror = () => reject(new Error('No se pudo renderizar el SVG'))
+      img.onerror = () => reject(new Error(tr('errors.svgRender')))
       img.src = url
     })
     const canvas = document.createElement('canvas')
     canvas.width = img.width * scale
     canvas.height = img.height * scale
     const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('Canvas no disponible')
+    if (!ctx) throw new Error(tr('errors.canvasUnavailable'))
     ctx.scale(scale, scale)
     ctx.drawImage(img, 0, 0)
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/png'),
     )
-    if (!blob) throw new Error('No se pudo generar el PNG')
+    if (!blob) throw new Error(tr('errors.pngFailed'))
     downloadBlob(blob, `${safeFilename(doc.title)}.png`)
   } finally {
     URL.revokeObjectURL(url)
@@ -92,7 +93,7 @@ export function exportPdf(docs: EditorDocument[], title?: string, labels: TabLab
 </html>`
   const win = window.open('', '_blank')
   if (!win) {
-    throw new Error('El navegador bloqueó la ventana de impresión')
+    throw new Error(tr('errors.printBlocked'))
   }
   win.document.write(html)
   win.document.close()

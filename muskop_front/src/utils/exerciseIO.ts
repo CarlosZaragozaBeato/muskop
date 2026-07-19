@@ -2,6 +2,7 @@ import { SKILLS } from '../types/routine'
 import type { ExerciseMeta, TheoryContent } from '../types/tab'
 import { parseTabContent } from '../components/tab/tabModel'
 import type { OwnedExercise } from '../storage/sessionManager'
+import { translate as tr } from '../i18n/translate'
 
 // ==========================================================================
 // Import/export de "packs de ejercicios" (JSON). Un pack agrupa varios
@@ -55,22 +56,20 @@ export function importExercisePack(raw: string, existingTitles: string[]): PackI
   try {
     parsed = JSON.parse(raw)
   } catch {
-    throw new Error('El texto no es JSON válido')
+    throw new Error(tr('errors.notJson'))
   }
   const obj = parsed as Record<string, unknown>
   if (!obj || typeof obj !== 'object') {
-    throw new Error('El JSON no tiene formato de pack de ejercicios')
+    throw new Error(tr('errors.notPack'))
   }
   if (typeof obj.muskopExercisePack !== 'number') {
-    throw new Error('Falta "muskopExercisePack": no parece un pack de ejercicios')
+    throw new Error(tr('errors.packMissingVersion'))
   }
   if (obj.muskopExercisePack > EXERCISE_PACK_VERSION) {
-    throw new Error(
-      `El pack es de una versión más nueva (${obj.muskopExercisePack}) que esta aplicación`,
-    )
+    throw new Error(tr('errors.packNewer', { v: obj.muskopExercisePack }))
   }
   if (!Array.isArray(obj.exercises) || obj.exercises.length === 0) {
-    throw new Error('El pack no tiene ejercicios ("exercises")')
+    throw new Error(tr('errors.packNoExercises'))
   }
 
   const owned = new Set(existingTitles.map((t) => t.trim().toLowerCase()))
@@ -78,7 +77,7 @@ export function importExercisePack(raw: string, existingTitles: string[]): PackI
   const exercises: PackExerciseInput[] = obj.exercises.map((rawEx, i) => {
     const e = rawEx as Record<string, unknown>
     if (!e || typeof e !== 'object' || typeof e.title !== 'string' || !e.title.trim()) {
-      throw new Error(`El ejercicio ${i + 1} necesita un título ("title")`)
+      throw new Error(tr('errors.exerciseNoTitle', { n: i + 1 }))
     }
     const title = e.title.trim()
 
@@ -89,7 +88,7 @@ export function importExercisePack(raw: string, existingTitles: string[]): PackI
     if (typeof e.skill === 'string' && SKILL_IDS.has(e.skill)) {
       skill = e.skill
     } else if (e.skill) {
-      warnings.push(`«${title}»: habilidad "${String(e.skill)}" no válida; se usa "general"`)
+      warnings.push(tr('errors.exerciseSkillInvalid', { title, skill: String(e.skill) }))
     }
 
     const level =
@@ -102,19 +101,19 @@ export function importExercisePack(raw: string, existingTitles: string[]): PackI
           ? (e.content as Record<string, unknown>).body
           : e.body
       if (typeof body !== 'string' || !body.trim()) {
-        throw new Error(`«${title}»: un ejercicio de teoría necesita "content.body"`)
+        throw new Error(tr('errors.exerciseTheoryBody', { title }))
       }
       content = { kind: 'theory', body } satisfies TheoryContent
     } else {
       try {
         content = parseTabContent(e.content)
       } catch {
-        throw new Error(`«${title}»: "content" no es una tablatura válida (formato v2)`)
+        throw new Error(tr('errors.exerciseContentInvalid', { title }))
       }
     }
 
     if (owned.has(title.toLowerCase())) {
-      warnings.push(`«${title}» ya existe en tu librería; se añade una copia`)
+      warnings.push(tr('errors.exerciseDuplicate', { title }))
     }
 
     return {

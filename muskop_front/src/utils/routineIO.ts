@@ -5,6 +5,7 @@ import {
   type PracticeBlock,
   type Routine,
 } from '../types/routine'
+import { translate as tr } from '../i18n/translate'
 
 // ==========================================================================
 // Importación/exportación de rutinas como JSON. Los recursos se referencian
@@ -30,17 +31,17 @@ export function importRoutineFromJson(
   try {
     parsed = JSON.parse(raw)
   } catch {
-    throw new Error('El texto no es JSON válido')
+    throw new Error(tr('errors.notJson'))
   }
   const obj = parsed as Record<string, unknown>
   if (!obj || typeof obj !== 'object') {
-    throw new Error('El JSON no tiene formato de rutina')
+    throw new Error(tr('errors.notRoutine'))
   }
   if (typeof obj.name !== 'string' || !obj.name.trim()) {
-    throw new Error('Falta el nombre de la rutina ("name")')
+    throw new Error(tr('errors.routineNoName'))
   }
   if (!Array.isArray(obj.blocks) || obj.blocks.length === 0) {
-    throw new Error('La rutina necesita al menos un bloque ("blocks")')
+    throw new Error(tr('errors.routineNoBlocks'))
   }
 
   const byTitle = new Map(resources.map((r) => [r.title.trim().toLowerCase(), r]))
@@ -49,19 +50,19 @@ export function importRoutineFromJson(
   const blocks: PracticeBlock[] = obj.blocks.map((rawBlock, i) => {
     const b = rawBlock as Record<string, unknown>
     if (!b || typeof b !== 'object' || typeof b.name !== 'string' || !b.name.trim()) {
-      throw new Error(`El bloque ${i + 1} necesita un nombre ("name")`)
+      throw new Error(tr('errors.blockNoName', { n: i + 1 }))
     }
     if (typeof b.minutes !== 'number' || b.minutes < 1 || b.minutes > 240) {
-      throw new Error(`Bloque ${i + 1} ("${b.name}"): "minutes" debe ser un número de 1 a 240`)
+      throw new Error(tr('errors.blockMinutes', { n: i + 1, name: b.name }))
     }
     if (b.bpm !== undefined && b.bpm !== null && (typeof b.bpm !== 'number' || b.bpm < 20 || b.bpm > 300)) {
-      throw new Error(`Bloque ${i + 1} ("${b.name}"): "bpm" debe estar entre 20 y 300`)
+      throw new Error(tr('errors.blockBpm', { n: i + 1, name: b.name }))
     }
     let skill: string | null = null
     if (typeof b.skill === 'string' && b.skill) {
       if (!SKILL_IDS.has(b.skill)) {
         throw new Error(
-          `Bloque ${i + 1} ("${b.name}"): habilidad "${b.skill}" no válida (${[...SKILL_IDS].join(', ')})`,
+          tr('errors.blockSkill', { n: i + 1, name: b.name, skill: b.skill, list: [...SKILL_IDS].join(', ') }),
         )
       }
       skill = b.skill
@@ -72,9 +73,7 @@ export function importRoutineFromJson(
       if (found) {
         resourceId = found.id
       } else {
-        warnings.push(
-          `Bloque ${i + 1} ("${b.name}"): no hay ningún recurso llamado «${b.resourceTitle}» en tu librería; queda sin recurso`,
-        )
+        warnings.push(tr('errors.blockResourceMissing', { n: i + 1, name: b.name, title: b.resourceTitle }))
       }
     }
     return {

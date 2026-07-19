@@ -21,6 +21,7 @@ import type {
   SaveResourceRequest,
 } from '../types/tab'
 import type { PracticeEntry, Routine } from '../types/routine'
+import { translate as tr } from '../i18n/translate'
 
 // ==========================================================================
 // Gestor de la sesión activa. Es la "base de datos" en memoria: cada
@@ -34,7 +35,7 @@ let active: { deviceId: string; session: MuskopSession } | null = null
 
 function requireActive(): { deviceId: string; session: MuskopSession } {
   if (!active) {
-    throw new Error('No hay ninguna sesión abierta')
+    throw new Error(tr('errors.noActiveSession'))
   }
   return active
 }
@@ -71,7 +72,7 @@ export async function startNewSession(
 export async function openStoredSession(deviceId: string): Promise<MuskopSession> {
   const stored = await getStoredSession(deviceId)
   if (!stored) {
-    throw new Error('La sesión ya no está en este dispositivo')
+    throw new Error(tr('errors.sessionGone'))
   }
   active = { deviceId, session: parseSession(stored.data) }
   localStorage.setItem(LAST_SESSION_KEY, deviceId)
@@ -87,7 +88,7 @@ export async function importSessionFile(file: File): Promise<MuskopSession> {
   try {
     raw = JSON.parse(await file.text())
   } catch {
-    throw new Error('El archivo no contiene JSON válido')
+    throw new Error(tr('errors.fileNotJson'))
   }
   const session = parseSession(raw)
   active = { deviceId: newDeviceId(), session }
@@ -165,7 +166,7 @@ export async function getResource(id: string): Promise<ResourceDetail> {
   const { session } = requireActive()
   const resource = session.resources.find((r) => r.id === id)
   if (!resource) {
-    throw new Error(`No existe el recurso #${id} en esta sesión`)
+    throw new Error(tr('errors.resourceNotFound', { id }))
   }
   return { ...toSummary(resource), content: resource.content }
 }
@@ -189,7 +190,7 @@ export async function updateResource(id: string, req: SaveResourceRequest): Prom
   const { session } = requireActive()
   const resource = session.resources.find((r) => r.id === id)
   if (!resource) {
-    throw new Error(`No existe el recurso #${id} en esta sesión`)
+    throw new Error(tr('errors.resourceNotFound', { id }))
   }
   resource.title = req.title
   resource.type = req.type
@@ -248,7 +249,7 @@ export async function setResourceExercise(
   const { session } = requireActive()
   const resource = session.resources.find((r) => r.id === id)
   if (!resource) {
-    throw new Error(`No existe el recurso #${id} en esta sesión`)
+    throw new Error(tr('errors.resourceNotFound', { id }))
   }
   resource.exercise = meta
   await persist()
@@ -265,7 +266,7 @@ export async function getRoutine(id: string): Promise<Routine> {
   const { session } = requireActive()
   const routine = session.routines.find((r) => r.id === id)
   if (!routine) {
-    throw new Error(`No existe la rutina #${id} en esta sesión`)
+    throw new Error(tr('errors.routineNotFound', { id }))
   }
   return routine
 }
@@ -282,7 +283,7 @@ export async function updateRoutine(id: string, input: Omit<Routine, 'id'>): Pro
   const { session } = requireActive()
   const index = session.routines.findIndex((r) => r.id === id)
   if (index < 0) {
-    throw new Error(`No existe la rutina #${id} en esta sesión`)
+    throw new Error(tr('errors.routineNotFound', { id }))
   }
   session.routines[index] = { ...input, id }
   await persist()

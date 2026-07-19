@@ -154,9 +154,10 @@ Ampliación (2026-07-18):
 - [x] El render/exportación de tablaturas (`TabSvg`, ASCII/PNG/PDF) recibe las
       etiquetas traducidas como datos (no vía hook) para funcionar también
       fuera del árbol de React.
-- Pendiente: los mensajes de error de validación de la capa de datos
-      (importadores/parseo) siguen en español; se traducirán si se decide
-      threadear `t` por esas funciones puras.
+- [x] Los mensajes de error de validación de la capa de datos
+      (importadores, sesión, packs, rutinas) se traducen con una función
+      `translate()` autónoma (`i18n/translate.ts`) que lee el idioma de
+      `localStorage`, reutilizable fuera del árbol de React.
 
 Al añadir texto de UI nuevo: crear la clave en **`en.ts` y `es.ts`** y usar
 `t('clave')` (nunca cadenas literales en los componentes).

@@ -11,6 +11,7 @@ import type {
   TabSectionDTO,
   Technique,
 } from '../../types/tab'
+import { translate as tr } from '../../i18n/translate'
 
 export const STRING_COUNT = 6
 
@@ -341,7 +342,7 @@ export function parseTabContent(content: unknown): TabDocument {
   if (obj && typeof obj === 'object' && obj.metadata && Array.isArray(obj.measures)) {
     return fromV1(obj as unknown as GuitarTabV1)
   }
-  throw new Error('El contenido no tiene formato de tablatura reconocible')
+  throw new Error(tr('errors.unrecognizedTab'))
 }
 
 // ==========================================================================

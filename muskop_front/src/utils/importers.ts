@@ -12,6 +12,7 @@ import {
   type EditorMeasure,
 } from '../components/tab/tabModel'
 import type { TabDocument } from '../types/tab'
+import { translate as tr } from '../i18n/translate'
 
 const TECHNIQUE_VALUES = new Set<string>(TECHNIQUES.map((t) => t.value))
 
@@ -24,7 +25,7 @@ export function importFromJson(raw: string): EditorDocument {
   try {
     parsed = JSON.parse(raw)
   } catch {
-    throw new Error('El texto no es JSON válido')
+    throw new Error(tr('errors.notJson'))
   }
   const doc = parseTabContent(parsed)
   validateDocument(doc)
@@ -33,45 +34,44 @@ export function importFromJson(raw: string): EditorDocument {
 
 function validateDocument(doc: TabDocument) {
   if (!Array.isArray(doc.sections)) {
-    throw new Error('Falta el array "sections"')
+    throw new Error(tr('errors.missingSections'))
   }
   doc.sections.forEach((section, i) => {
+    const name = section.name ?? tr('errors.unnamedSection')
     if (section.kind === 'chords') {
       if (!Array.isArray(section.chords)) {
-        throw new Error(`La sección ${i + 1} (${section.name ?? 'sin nombre'}) no tiene "chords"`)
+        throw new Error(tr('errors.sectionNoChords', { n: i + 1, name }))
       }
       return
     }
     if (!Array.isArray(section.measures)) {
-      throw new Error(`La sección ${i + 1} (${section.name ?? 'sin nombre'}) no tiene "measures"`)
+      throw new Error(tr('errors.sectionNoMeasures', { n: i + 1, name }))
     }
     section.measures.forEach((measure, mi) => {
+      const s = i + 1
+      const m = mi + 1
       for (const event of measure.events ?? []) {
         if (typeof event.beat !== 'number' || event.beat < 1 || event.beat >= 5) {
-          throw new Error(
-            `Sección ${i + 1}, compás ${mi + 1}: beat ${event.beat} fuera de rango (1 ≤ beat < 5)`,
-          )
+          throw new Error(tr('errors.beatRange', { s, m, beat: event.beat }))
         }
         for (const note of event.notes ?? []) {
           if (note.string < 1 || note.string > STRING_COUNT) {
-            throw new Error(
-              `Sección ${i + 1}, compás ${mi + 1}: cuerda ${note.string} no válida (1–6)`,
-            )
+            throw new Error(tr('errors.stringRange', { s, m, string: note.string }))
           }
           if (note.fret < 0 || note.fret > MAX_FRET) {
-            throw new Error(
-              `Sección ${i + 1}, compás ${mi + 1}: traste ${note.fret} no válido (0–${MAX_FRET})`,
-            )
+            throw new Error(tr('errors.fretRange', { s, m, fret: note.fret, max: MAX_FRET }))
           }
           if (note.finger && !['p', 'i', 'm', 'a'].includes(note.finger)) {
-            throw new Error(
-              `Sección ${i + 1}, compás ${mi + 1}: dedo "${note.finger}" no válido (p, i, m, a)`,
-            )
+            throw new Error(tr('errors.fingerInvalid', { s, m, finger: note.finger }))
           }
           if (note.technique && !TECHNIQUE_VALUES.has(note.technique)) {
             throw new Error(
-              `Sección ${i + 1}, compás ${mi + 1}: técnica "${note.technique}" no válida ` +
-                `(${[...TECHNIQUE_VALUES].join(', ')})`,
+              tr('errors.techniqueInvalid', {
+                s,
+                m,
+                technique: note.technique,
+                list: [...TECHNIQUE_VALUES].join(', '),
+              }),
             )
           }
         }
@@ -92,7 +92,7 @@ export function importFromAscii(raw: string): EditorDocument {
     .filter((l) => /\|/.test(l) && /-/.test(l))
 
   if (lines.length < STRING_COUNT) {
-    throw new Error('No se encontraron 6 líneas de tablatura (formato e|---)')
+    throw new Error(tr('errors.noAsciiLines'))
   }
 
   const block = lines.slice(0, STRING_COUNT).map((line) => {
@@ -145,7 +145,7 @@ export function importFromAscii(raw: string): EditorDocument {
   })
 
   if (measures.length === 0) {
-    throw new Error('No se pudo extraer ningún compás del texto')
+    throw new Error(tr('errors.noMeasuresExtracted'))
   }
 
   return {
@@ -155,7 +155,7 @@ export function importFromAscii(raw: string): EditorDocument {
     timeSignature: '4/4',
     baseBpm: 120,
     sections: [
-      { id: newId(), kind: 'tab', name: 'Importado', bpm: null, notes: null, measures },
+      { id: newId(), kind: 'tab', name: tr('errors.importedSection'), bpm: null, notes: null, measures },
     ],
   }
 }

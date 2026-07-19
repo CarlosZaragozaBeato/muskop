@@ -19,6 +19,7 @@ import {
   type Routine,
 } from '../types/routine'
 import type { CollectionContent, ExerciseMeta } from '../types/tab'
+import { translate as tr } from '../i18n/translate'
 
 export const SESSION_VERSION = 1
 
@@ -158,21 +159,19 @@ function normalizeContent(content: unknown): unknown {
 export function parseSession(raw: unknown): MuskopSession {
   const obj = raw as Partial<MuskopSession>
   if (!obj || typeof obj !== 'object' || typeof obj.muskopSession !== 'number') {
-    throw new Error('El archivo no es una sesión de Muskop (falta "muskopSession")')
+    throw new Error(tr('errors.notSession'))
   }
   if (obj.muskopSession > SESSION_VERSION) {
-    throw new Error(
-      `La sesión es de una versión más nueva (${obj.muskopSession}) que esta aplicación (${SESSION_VERSION})`,
-    )
+    throw new Error(tr('errors.sessionNewer', { v: obj.muskopSession, cur: SESSION_VERSION }))
   }
   if (!obj.user || typeof obj.user.username !== 'string' || !obj.user.username.trim()) {
-    throw new Error('La sesión no tiene usuario válido')
+    throw new Error(tr('errors.sessionNoUser'))
   }
   const rawResources = Array.isArray(obj.resources) ? obj.resources : []
   const resources: SessionResource[] = rawResources.map((r) => {
     const id = toId((r as { id?: unknown })?.id)
     if (id === null || typeof r.title !== 'string' || typeof r.type !== 'string') {
-      throw new Error(`Recurso inválido en la sesión (id=${String((r as { id?: unknown })?.id)})`)
+      throw new Error(tr('errors.sessionBadResource', { id: String((r as { id?: unknown })?.id) }))
     }
     return {
       id,
