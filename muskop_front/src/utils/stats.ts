@@ -31,7 +31,7 @@ export function practiceStreak(log: PracticeEntry[], filter?: (e: PracticeEntry)
 }
 
 /** Racha de días consecutivos completando una rutina concreta. */
-export function routineCompletionStreak(log: PracticeEntry[], routineId: number): number {
+export function routineCompletionStreak(log: PracticeEntry[], routineId: string): number {
   return practiceStreak(log, (e) => e.routineId === routineId && e.completed)
 }
 
@@ -55,6 +55,6 @@ export function totalMinutes(log: PracticeEntry[]): number {
   return log.reduce((total, e) => total + e.minutes, 0)
 }
 
-export function timesCompleted(log: PracticeEntry[], routineId: number): number {
+export function timesCompleted(log: PracticeEntry[], routineId: string): number {
   return log.filter((e) => e.routineId === routineId && e.completed).length
 }

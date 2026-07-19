@@ -13,6 +13,8 @@ export interface StoredSession {
   /** Id local del dispositivo (no viaja en el archivo exportado) */
   id: string
   username: string
+  /** Etiqueta opcional para distinguir varias sesiones del mismo usuario */
+  label?: string | null
   updatedAt: string
   data: MuskopSession
 }

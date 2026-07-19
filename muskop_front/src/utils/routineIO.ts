@@ -66,7 +66,7 @@ export function importRoutineFromJson(
       }
       skill = b.skill
     }
-    let resourceId: number | null = null
+    let resourceId: string | null = null
     if (typeof b.resourceTitle === 'string' && b.resourceTitle.trim()) {
       const found = byTitle.get(b.resourceTitle.trim().toLowerCase())
       if (found) {

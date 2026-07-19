@@ -14,9 +14,9 @@ cualquier aplicación que comparta el mismo formato.
 ## Principios
 
 1. **Sin backend para datos.** Nada de base de datos remota; la app funciona
-   entera en el navegador. `muskop_core` deja de ser una dependencia (queda
-   aparcado; podría volver en el futuro como sincronización opcional, nunca
-   como requisito).
+   entera en el navegador. El antiguo `muskop_core` (backend Java) se ha
+   eliminado del repo; podría volver en el futuro como sincronización
+   opcional, nunca como requisito.
 2. **El archivo es la fuente de verdad.** La librería de tablaturas/prácticas
    se guarda en archivos exportables con estructura documentada y versionada
    (JSON). Portabilidad primero: otras apps que implementen el formato deben
@@ -42,17 +42,25 @@ cualquier aplicación que comparta el mismo formato.
 ```json
 {
   "muskopSession": 1,
-  "user": { "username": "carlos", "createdAt": "...", "updatedAt": "..." },
+  "user": { "username": "carlos", "label": "clásica",
+            "createdAt": "...", "updatedAt": "..." },
   "resources": [
-    { "id": 1, "title": "...", "type": "TAB|CHORD|SNIPPET|COLLECTION",
-      "category": "...", "content": { /* TabDocument v2, chord, snippet, collection */ } }
+    { "id": "uuid", "title": "...", "type": "TAB|CHORD|SNIPPET|COLLECTION|THEORY",
+      "category": "...", "content": { /* TabDocument v2, chord, snippet, collection, theory */ },
+      "exercise": { "skill": "arpegios", "level": 1, "description": "..." } }
   ],
   "routines": [ /* ver bloque de rutinas */ ],
+  "practiceLog": [ /* una entrada por sesión de práctica */ ],
+  "experience": { "arpegios": 120 },
   "settings": { /* preferencias del usuario */ }
 }
 ```
 
 - Extensión sugerida: `.muskop.json` (sigue siendo JSON legible).
+- Ids de recurso y rutina por **UUID** (string). Al abrir sesiones antiguas
+  con ids numéricos se migran a string automáticamente.
+- `user.label` opcional: distingue varias sesiones del mismo usuario.
+- `exercise` opcional en un recurso: lo marca como ejercicio (habilidad/nivel).
 - El `content` de los recursos reutiliza los formatos ya existentes
   (TabDocument v2 — ver `AGENT_CONTEXT.md`), que no cambian.
 - Versionado explícito (`muskopSession`) para poder migrar en el futuro.
@@ -69,12 +77,13 @@ cualquier aplicación que comparta el mismo formato.
 - [x] Exportar sesión (botón «⬇ Sesión», archivo `usuario.muskop.json`) e
       importar sesión con validación de versión (`muskopSession: 1`).
 - [x] Autoguardado en IndexedDB en cada cambio.
-- [x] Retiradas las llamadas HTTP y el proxy de Vite; `muskop_core` queda
-      aparcado (sin tocar, en el repo).
+- [x] Retiradas las llamadas HTTP y el proxy de Vite; `muskop_core` eliminado
+      del repo (2026-07-19, ver «Decisiones tomadas»).
 
 Decisiones tomadas: IndexedDB (un store `sessions`, un registro por sesión);
-ids de recurso por autoincremento local (`nextResourceId` en el archivo);
-`localStorage` solo guarda el id de la última sesión abierta.
+ids de recurso y rutina por **UUID** (antes autoincremento local; migración
+automática al abrir sesiones antiguas); `localStorage` solo guarda el id de la
+última sesión abierta.
 
 ### Fase 2 — Rutinas y bloques de práctica ✅ 2026-07-18
 
@@ -121,15 +130,15 @@ Ampliación (2026-07-18):
       (`/theory/new`, `/theory/:id`), visor integrado, 4 artículos de
       arranque en Explorar, y usable como bloque de estudio en las rutinas
       (se muestra en el modo práctica).
-- [ ] **Añadir ejercicios propios**: que el usuario pueda crear sus propios
-      ejercicios guiados, no solo consumir el catálogo incluido. Idea:
-      marcar cualquier tablatura/teoría de la librería como "ejercicio" con
-      **habilidad + nivel + descripción** (metadatos en el propio recurso),
-      de modo que aparezca junto al catálogo en Explorar y en las
-      recomendaciones por nivel de la página de Progreso. Incluir también
-      importación/exportación de packs de ejercicios (JSON) para
-      compartirlos o pedírselos a un agente, reutilizando el formato de
-      `AGENT_CONTEXT.md` con los metadatos de habilidad/nivel.
+- [x] **Añadir ejercicios propios** ✅ 2026-07-19: el usuario marca cualquier
+      tablatura o teoría de su librería como "ejercicio" con **habilidad +
+      nivel + descripción** (metadatos en el propio recurso, campo `exercise`).
+      Se marca desde la Librería (botón 🎯); los ejercicios propios aparecen
+      junto al catálogo en Explorar (con badge «Tuyo» y filtro de origen) y en
+      las recomendaciones por nivel de Progreso (enlazados a su editor).
+      **Import/export de packs de ejercicios** (JSON, `muskopExercisePack: 1`)
+      desde Explorar, reutilizando los formatos de contenido existentes
+      (TabDocument v2 y teoría); formato documentado en `AGENT_CONTEXT.md`.
 
 ### Fase 4 — Móvil (futuro)
 
@@ -138,13 +147,23 @@ Ampliación (2026-07-18):
       (Capacitor). Decidir cuando llegue el momento; la arquitectura
       local-first ya lo facilita.
 
-## Decisiones pendientes (apuntar aquí al decidirlas)
+## Decisiones tomadas (2026-07-19)
 
-- Persistencia local exacta: IndexedDB vs localStorage (tamaño de sesiones),
-  y si se usa File System Access API para "guardar en el mismo archivo".
-- ¿Una sesión por usuario o varias sesiones por usuario? (p. ej. "carlos —
-  clásica" y "carlos — eléctrica").
-- Estrategia de ids dentro de la sesión (autoincremento local vs uuid) para
-  que importar/fusionar sesiones no colisione.
-- Qué hacer exactamente con `muskop_core` en el repo (mantener aparcado,
-  moverlo a una rama, o eliminarlo).
+- **Persistencia local: IndexedDB.** Un único store `sessions`, un registro
+  por sesión (ya en uso desde la Fase 1). Se descarta localStorage por tamaño.
+  (El uso de File System Access API para "guardar en el mismo archivo" queda
+  como posible mejora futura, no bloqueante.)
+- **Varias sesiones por usuario.** Cada sesión es un registro independiente en
+  el dispositivo; un mismo usuario puede tener varias (p. ej. "carlos —
+  clásica" y "carlos — eléctrica"). Se añade una **etiqueta** opcional
+  (`user.label`) al crear la sesión para distinguirlas en el login y en el
+  nombre del archivo descargado.
+- **Ids por UUID.** Recursos y rutinas usan UUID (`crypto.randomUUID`) en vez
+  de autoincremento local, para que importar/fusionar sesiones nunca colisione.
+  Las sesiones antiguas se migran al abrirlas: los ids numéricos se convierten
+  a string de forma determinista (`1` → `"1"`), conservando las referencias
+  (bloques → recurso, colecciones, registro de práctica → rutina).
+- **`muskop_core` eliminado.** El backend Java/Quarkus no se usa en la
+  arquitectura local-first; se ha eliminado del repo (recuperable por el
+  historial de git si algún día se retoma la sincronización opcional). También
+  se retiró el `.dockerignore` raíz, que solo servía a ese backend.

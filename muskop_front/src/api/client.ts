@@ -1,5 +1,10 @@
 import * as sessions from '../storage/sessionManager'
-import type { ResourceDetail, ResourceSummary, SaveResourceRequest } from '../types/tab'
+import type {
+  ExerciseMeta,
+  ResourceDetail,
+  ResourceSummary,
+  SaveResourceRequest,
+} from '../types/tab'
 
 // ==========================================================================
 // Capa de acceso a datos. Antes hablaba con el backend por HTTP; desde la
@@ -8,7 +13,7 @@ import type { ResourceDetail, ResourceSummary, SaveResourceRequest } from '../ty
 // la app: el parámetro userId ya no significa nada.
 // ==========================================================================
 
-export function createResource(_userId: number, req: SaveResourceRequest): Promise<number> {
+export function createResource(_userId: number, req: SaveResourceRequest): Promise<string> {
   return sessions.createResource(req)
 }
 
@@ -19,14 +24,18 @@ export function listResources(
   return sessions.listResources(filters)
 }
 
-export function getResource(id: number): Promise<ResourceDetail> {
+export function getResource(id: string): Promise<ResourceDetail> {
   return sessions.getResource(id)
 }
 
-export function updateResource(id: number, req: SaveResourceRequest): Promise<void> {
+export function updateResource(id: string, req: SaveResourceRequest): Promise<void> {
   return sessions.updateResource(id, req)
 }
 
-export function deleteResource(id: number): Promise<void> {
+export function deleteResource(id: string): Promise<void> {
   return sessions.deleteResource(id)
+}
+
+export function setResourceExercise(id: string, meta: ExerciseMeta | null): Promise<void> {
+  return sessions.setResourceExercise(id, meta)
 }

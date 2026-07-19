@@ -11,7 +11,7 @@ import type { TheoryContent } from '../types/tab'
 export default function TheoryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const resourceId = id ? Number(id) : null
+  const resourceId = id ?? null
 
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')

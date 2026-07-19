@@ -12,7 +12,7 @@ export interface PracticeBlock {
   /** BPM objetivo del bloque (null = libre) */
   bpm: number | null
   /** Recurso de la librería asociado (tablatura/acorde/fragmento), si lo hay */
-  resourceId: number | null
+  resourceId: string | null
   /** Habilidad que entrena el bloque (gana experiencia al practicarlo) */
   skill: string | null
   /** Indicaciones: en qué fijarse durante el bloque */
@@ -20,7 +20,7 @@ export interface PracticeBlock {
 }
 
 export interface Routine {
-  id: number
+  id: string
   name: string
   description: string | null
   /** Tipo de rutina: diaria, esporádica, por canción, velocidad… */
@@ -42,10 +42,22 @@ export function routineMinutes(routine: Routine | Omit<Routine, 'id'>): number {
   return routine.blocks.reduce((total, block) => total + (block.minutes || 0), 0)
 }
 
-let blockCounter = 0
+/** Id único (UUID) para recursos, rutinas y bloques. Con UUIDs, importar o
+ * fusionar sesiones nunca provoca colisiones de id. */
+export function uuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  // respaldo para entornos sin crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export function newBlockId(): string {
-  blockCounter += 1
-  return `b${Date.now().toString(36)}${blockCounter}`
+  return uuid()
 }
 
 export function newBlock(): PracticeBlock {
@@ -67,7 +79,7 @@ export function newBlock(): PracticeBlock {
 export interface PracticeEntry {
   /** Día local en formato YYYY-MM-DD */
   date: string
-  routineId: number
+  routineId: string
   /** Minutos realmente practicados */
   minutes: number
   /** true si se llegó al final de la rutina */

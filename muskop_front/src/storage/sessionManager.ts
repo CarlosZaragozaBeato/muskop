@@ -10,10 +10,16 @@ import {
   createSession,
   parseSession,
   sessionFilename,
+  uuid,
   type MuskopSession,
   type SessionResource,
 } from './session'
-import type { ResourceDetail, ResourceSummary, SaveResourceRequest } from '../types/tab'
+import type {
+  ExerciseMeta,
+  ResourceDetail,
+  ResourceSummary,
+  SaveResourceRequest,
+} from '../types/tab'
 import type { PracticeEntry, Routine } from '../types/routine'
 
 // ==========================================================================
@@ -39,6 +45,7 @@ async function persist(): Promise<void> {
   await putStoredSession({
     id: deviceId,
     username: session.user.username,
+    label: session.user.label ?? null,
     updatedAt: session.user.updatedAt,
     data: session,
   })
@@ -50,8 +57,11 @@ export function getActiveSession(): MuskopSession | null {
   return active?.session ?? null
 }
 
-export async function startNewSession(username: string): Promise<MuskopSession> {
-  const session = createSession(username.trim())
+export async function startNewSession(
+  username: string,
+  label?: string,
+): Promise<MuskopSession> {
+  const session = createSession(username.trim(), label)
   active = { deviceId: newDeviceId(), session }
   localStorage.setItem(LAST_SESSION_KEY, active.deviceId)
   await persist()
@@ -129,6 +139,7 @@ function toSummary(resource: SessionResource): ResourceSummary {
     title: resource.title,
     type: resource.type,
     category: resource.category,
+    exercise: resource.exercise ?? null,
   }
 }
 
@@ -146,7 +157,7 @@ export async function listResources(filters?: {
     .map(toSummary)
 }
 
-export async function getResource(id: number): Promise<ResourceDetail> {
+export async function getResource(id: string): Promise<ResourceDetail> {
   const { session } = requireActive()
   const resource = session.resources.find((r) => r.id === id)
   if (!resource) {
@@ -155,22 +166,22 @@ export async function getResource(id: number): Promise<ResourceDetail> {
   return { ...toSummary(resource), content: resource.content }
 }
 
-export async function createResource(req: SaveResourceRequest): Promise<number> {
+export async function createResource(req: SaveResourceRequest): Promise<string> {
   const { session } = requireActive()
-  const id = session.nextResourceId
-  session.nextResourceId += 1
+  const id = uuid()
   session.resources.push({
     id,
     title: req.title,
     type: req.type,
     category: req.category,
     content: req.content,
+    exercise: req.exercise ?? null,
   })
   await persist()
   return id
 }
 
-export async function updateResource(id: number, req: SaveResourceRequest): Promise<void> {
+export async function updateResource(id: string, req: SaveResourceRequest): Promise<void> {
   const { session } = requireActive()
   const resource = session.resources.find((r) => r.id === id)
   if (!resource) {
@@ -180,12 +191,62 @@ export async function updateResource(id: number, req: SaveResourceRequest): Prom
   resource.type = req.type
   resource.category = req.category
   resource.content = req.content
+  // Solo se toca `exercise` si la petición lo trae; así editar la tablatura no
+  // borra los metadatos de ejercicio puestos desde la librería.
+  if ('exercise' in req) {
+    resource.exercise = req.exercise ?? null
+  }
   await persist()
 }
 
-export async function deleteResource(id: number): Promise<void> {
+export async function deleteResource(id: string): Promise<void> {
   const { session } = requireActive()
   session.resources = session.resources.filter((r) => r.id !== id)
+  await persist()
+}
+
+// ---- Ejercicios propios -----------------------------------------------------
+
+/** Un recurso de la librería marcado como ejercicio, con su contenido. */
+export interface OwnedExercise {
+  id: string
+  title: string
+  /** TAB | THEORY */
+  type: string
+  category: string | null
+  skill: string
+  level: number
+  description: string
+  content: unknown
+}
+
+export async function listExercises(): Promise<OwnedExercise[]> {
+  const { session } = requireActive()
+  return session.resources
+    .filter((r) => r.exercise)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      type: r.type,
+      category: r.category,
+      skill: r.exercise!.skill,
+      level: r.exercise!.level,
+      description: r.exercise!.description,
+      content: r.content,
+    }))
+}
+
+/** Marca (o desmarca, con null) un recurso como ejercicio sin tocar su contenido. */
+export async function setResourceExercise(
+  id: string,
+  meta: ExerciseMeta | null,
+): Promise<void> {
+  const { session } = requireActive()
+  const resource = session.resources.find((r) => r.id === id)
+  if (!resource) {
+    throw new Error(`No existe el recurso #${id} en esta sesión`)
+  }
+  resource.exercise = meta
   await persist()
 }
 
@@ -196,7 +257,7 @@ export async function listRoutines(): Promise<Routine[]> {
   return session.routines
 }
 
-export async function getRoutine(id: number): Promise<Routine> {
+export async function getRoutine(id: string): Promise<Routine> {
   const { session } = requireActive()
   const routine = session.routines.find((r) => r.id === id)
   if (!routine) {
@@ -205,16 +266,15 @@ export async function getRoutine(id: number): Promise<Routine> {
   return routine
 }
 
-export async function createRoutine(input: Omit<Routine, 'id'>): Promise<number> {
+export async function createRoutine(input: Omit<Routine, 'id'>): Promise<string> {
   const { session } = requireActive()
-  const id = session.nextRoutineId
-  session.nextRoutineId += 1
+  const id = uuid()
   session.routines.push({ ...input, id })
   await persist()
   return id
 }
 
-export async function updateRoutine(id: number, input: Omit<Routine, 'id'>): Promise<void> {
+export async function updateRoutine(id: string, input: Omit<Routine, 'id'>): Promise<void> {
   const { session } = requireActive()
   const index = session.routines.findIndex((r) => r.id === id)
   if (index < 0) {
@@ -224,7 +284,7 @@ export async function updateRoutine(id: number, input: Omit<Routine, 'id'>): Pro
   await persist()
 }
 
-export async function deleteRoutine(id: number): Promise<void> {
+export async function deleteRoutine(id: string): Promise<void> {
   const { session } = requireActive()
   session.routines = session.routines.filter((r) => r.id !== id)
   await persist()

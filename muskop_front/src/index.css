@@ -275,6 +275,12 @@ textarea:focus {
   color: var(--muted);
 }
 
+.chip-exercise {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
 /* ===== Modal ===== */
 
 .modal-backdrop {
@@ -800,6 +806,24 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+
+.skill-own {
+  margin-top: 0.5rem;
+}
+
+.linklike {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.linklike:hover {
+  text-decoration: underline;
 }
 
 .xp-gains {

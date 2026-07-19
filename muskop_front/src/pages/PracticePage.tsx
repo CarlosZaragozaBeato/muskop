@@ -84,8 +84,9 @@ export default function PracticePage() {
   )
 
   useEffect(() => {
+    if (!id) return
     sessions
-      .getRoutine(Number(id))
+      .getRoutine(id)
       .then(setRoutine)
       .catch((err) => setError(err instanceof Error ? err.message : 'Rutina no encontrada'))
   }, [id])

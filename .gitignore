@@ -43,6 +43,3 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
-
-# LOCAL DB
-muskop_core/local-dev.db

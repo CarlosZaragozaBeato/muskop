@@ -119,7 +119,7 @@ export interface ChordContent {
 /** Colección de recursos (tipo de recurso COLLECTION) */
 export interface CollectionContent {
   kind: 'collection'
-  resourceIds: number[]
+  resourceIds: string[]
 }
 
 /** Artículo de teoría (tipo de recurso THEORY). El cuerpo admite un
@@ -127,6 +127,23 @@ export interface CollectionContent {
 export interface TheoryContent {
   kind: 'theory'
   body: string
+}
+
+// ---- Ejercicios ----------------------------------------------------------
+
+/**
+ * Metadatos que convierten un recurso (tablatura o teoría) de la librería en
+ * un **ejercicio guiado** del usuario: aparece junto al catálogo incluido en
+ * Explorar y en las recomendaciones por nivel de Progreso. Viven en el propio
+ * recurso, no en su `content`, para que sirvan a cualquier tipo de recurso.
+ */
+export interface ExerciseMeta {
+  /** Habilidad que entrena (id de SKILLS: arpegios, patrones…) */
+  skill: string
+  /** Nivel recomendado (1 en adelante) */
+  level: number
+  /** Indicaciones: qué se practica y en qué fijarse */
+  description: string
 }
 
 // ---- API -----------------------------------------------------------------
@@ -139,10 +156,12 @@ export interface MuskopUser {
 }
 
 export interface ResourceSummary {
-  id: number
+  id: string
   title: string
   type: string
   category: string | null
+  /** Presente si el usuario ha marcado el recurso como ejercicio */
+  exercise?: ExerciseMeta | null
 }
 
 export interface ResourceDetail extends ResourceSummary {
@@ -154,4 +173,5 @@ export interface SaveResourceRequest {
   type: string
   category: string | null
   content: unknown
+  exercise?: ExerciseMeta | null
 }

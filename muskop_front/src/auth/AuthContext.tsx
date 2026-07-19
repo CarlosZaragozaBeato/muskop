@@ -12,7 +12,7 @@ interface AuthContextValue {
   user: MuskopUser | null
   /** false mientras se intenta reabrir la última sesión del dispositivo */
   ready: boolean
-  createSession: (username: string) => Promise<void>
+  createSession: (username: string, label?: string) => Promise<void>
   openSession: (deviceId: string) => Promise<void>
   importSession: (file: File) => Promise<void>
   downloadSession: () => void
@@ -44,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const createSession = useCallback(async (username: string) => {
-    setUser(toUser(await sessions.startNewSession(username)))
+  const createSession = useCallback(async (username: string, label?: string) => {
+    setUser(toUser(await sessions.startNewSession(username, label)))
   }, [])
 
   const openSession = useCallback(async (deviceId: string) => {

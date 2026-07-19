@@ -8,7 +8,9 @@ import {
   type EditorDocument,
 } from '../components/tab/tabModel'
 import { exportPdf, exportPng, exportText } from '../utils/exporters'
-import type { CollectionContent, ResourceSummary } from '../types/tab'
+import ExerciseDialog from '../components/ExerciseDialog'
+import { skillLabel } from '../types/routine'
+import type { CollectionContent, ExerciseMeta, ResourceSummary } from '../types/tab'
 
 const TYPE_LABELS: Record<string, string> = {
   TAB: 'Tablatura',
@@ -26,6 +28,7 @@ export default function LibraryPage() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [creatingCollection, setCreatingCollection] = useState(false)
+  const [exerciseTarget, setExerciseTarget] = useState<ResourceSummary | null>(null)
 
   const reload = useCallback(() => {
     if (!user) return
@@ -52,7 +55,7 @@ export default function LibraryPage() {
     [items, typeFilter, categoryFilter],
   )
 
-  const loadDocument = async (id: number): Promise<EditorDocument> => {
+  const loadDocument = async (id: string): Promise<EditorDocument> => {
     const detail = await api.getResource(id)
     const doc = fromDocument(parseTabContent(detail.content))
     doc.title = doc.title || detail.title
@@ -77,6 +80,13 @@ export default function LibraryPage() {
   const remove = async (item: ResourceSummary) => {
     if (!window.confirm(`¿Eliminar «${item.title}»?`)) return
     await api.deleteResource(item.id)
+    reload()
+  }
+
+  const saveExercise = async (meta: ExerciseMeta | null) => {
+    if (!exerciseTarget) return
+    await api.setResourceExercise(exerciseTarget.id, meta)
+    setExerciseTarget(null)
     reload()
   }
 
@@ -125,6 +135,11 @@ export default function LibraryPage() {
               </span>
               <span className="library-item-title">{item.title}</span>
               {item.category && <span className="chip">{item.category}</span>}
+              {item.exercise && (
+                <span className="chip chip-exercise" title="Aparece en Explorar y Progreso">
+                  🎯 {skillLabel(item.exercise.skill)} · nivel {item.exercise.level}
+                </span>
+              )}
               <span className="row-actions">
                 {type === 'TAB' && (
                   <>
@@ -156,6 +171,11 @@ export default function LibraryPage() {
                     Editar
                   </button>
                 )}
+                {(type === 'TAB' || type === 'THEORY') && (
+                  <button type="button" onClick={() => setExerciseTarget(item)}>
+                    {item.exercise ? '🎯 Ejercicio' : '🎯 Marcar'}
+                  </button>
+                )}
                 {type === 'COLLECTION' && (
                   <>
                     <button
@@ -178,6 +198,16 @@ export default function LibraryPage() {
           )
         })}
       </ul>
+
+      {exerciseTarget && (
+        <ExerciseDialog
+          title={exerciseTarget.title}
+          initial={exerciseTarget.exercise ?? null}
+          onSave={saveExercise}
+          onRemove={() => saveExercise(null)}
+          onClose={() => setExerciseTarget(null)}
+        />
+      )}
 
       {creatingCollection && items !== null && (
         <CollectionDialog
@@ -207,13 +237,13 @@ function CollectionDialog({
 }: {
   tabs: ResourceSummary[]
   onClose: () => void
-  onCreate: (name: string, ids: number[]) => Promise<void>
+  onCreate: (name: string, ids: string[]) => Promise<void>
 }) {
   const [name, setName] = useState('')
-  const [selected, setSelected] = useState<number[]>([])
+  const [selected, setSelected] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  const toggle = (id: number) => {
+  const toggle = (id: string) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     )

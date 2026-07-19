@@ -15,7 +15,7 @@ export default function TabEditorPage() {
   const { user } = useAuth()
   const { id } = useParams()
   const navigate = useNavigate()
-  const resourceId = id ? Number(id) : null
+  const resourceId = id ?? null
 
   const [initialDoc, setInitialDoc] = useState<EditorDocument | null>(
     resourceId === null ? emptyDocument() : null,

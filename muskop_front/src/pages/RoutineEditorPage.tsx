@@ -16,7 +16,7 @@ const RESOURCE_TYPES_FOR_BLOCKS = ['TAB', 'CHORD', 'SNIPPET', 'THEORY']
 export default function RoutineEditorPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const routineId = id ? Number(id) : null
+  const routineId = id ?? null
 
   const [routine, setRoutine] = useState<Omit<Routine, 'id'> | null>(
     routineId === null
@@ -107,7 +107,7 @@ export default function RoutineEditorPage() {
     }
   }
 
-  const total = routineMinutes({ ...routine, id: 0 })
+  const total = routineMinutes(routine)
 
   return (
     <div className="routine-editor-page">
@@ -218,7 +218,7 @@ export default function RoutineEditorPage() {
                   value={block.resourceId ?? ''}
                   onChange={(e) =>
                     updateBlock(block.id, {
-                      resourceId: e.target.value ? Number(e.target.value) : null,
+                      resourceId: e.target.value || null,
                     })
                   }
                 >

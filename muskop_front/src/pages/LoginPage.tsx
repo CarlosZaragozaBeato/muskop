@@ -12,6 +12,7 @@ export default function LoginPage() {
   const { user, ready, createSession, openSession, importSession } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
+  const [label, setLabel] = useState('')
   const [stored, setStored] = useState<StoredSession[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -42,7 +43,7 @@ export default function LoginPage() {
   const handleCreate = (e: FormEvent) => {
     e.preventDefault()
     if (!username.trim()) return
-    run(() => createSession(username))()
+    run(() => createSession(username, label))()
   }
 
   const handleImport = (file: File | undefined) => {
@@ -72,6 +73,12 @@ export default function LoginPage() {
             autoFocus
             onChange={(e) => setUsername(e.target.value)}
           />
+          <input
+            type="text"
+            placeholder="Etiqueta (opcional): clásica, eléctrica…"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+          />
           <button type="submit" className="primary" disabled={loading || !username.trim()}>
             {loading ? 'Abriendo…' : 'Crear sesión nueva'}
           </button>
@@ -100,7 +107,7 @@ export default function LoginPage() {
                     className="session-open"
                     onClick={run(() => openSession(s.id))}
                   >
-                    <strong>{s.username}</strong>
+                    <strong>{s.label ? `${s.username} — ${s.label}` : s.username}</strong>
                     <span className="muted">
                       {new Date(s.updatedAt).toLocaleString()}
                     </span>

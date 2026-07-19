@@ -175,3 +175,51 @@ Reglas:
 - `category` opcional, texto libre; típicas: `diaria`, `esporádica`,
   `canción`, `velocidad`, `técnica`, `fingerstyle`, `repertorio`.
 - Devuelve solo el objeto JSON, sin texto alrededor.
+
+---
+
+# Formato de PACKS DE EJERCICIOS (tercer tipo de importación)
+
+Muskop también importa **packs de ejercicios** (en Explorar → Importar pack).
+Un pack agrupa varios ejercicios propios —tablaturas o artículos de teoría—
+con sus metadatos de **habilidad** y **nivel**, para compartirlos, guardarlos
+o pedírselos a un agente. Cada ejercicio importado se añade a la librería del
+usuario ya marcado como ejercicio, y aparece en Explorar y en las
+recomendaciones por nivel de Progreso.
+
+```json
+{
+  "muskopExercisePack": 1,
+  "exercises": [
+    {
+      "title": "Mi arpegio de calentamiento",
+      "type": "TAB",
+      "skill": "arpegios",
+      "level": 1,
+      "description": "p-i-m-a sobre Am, mano relajada y sin mirar.",
+      "content": { "version": 2, "title": "...", "sections": [ ... ] }
+    },
+    {
+      "title": "Nota sobre el bajo alternado",
+      "type": "THEORY",
+      "skill": "patrones",
+      "level": 3,
+      "description": "Recordatorio de por qué el pulgar no puede fallar.",
+      "content": { "kind": "theory", "body": "# Bajo alternado\n\n..." }
+    }
+  ]
+}
+```
+
+Reglas:
+
+- `muskopExercisePack` obligatorio (versión, hoy `1`); `exercises` con al
+  menos un elemento.
+- Por ejercicio: `title` obligatorio; `type` `"TAB"` (por defecto) o
+  `"THEORY"`; `level` entero ≥ 1 (por defecto 1); `description` opcional.
+- `skill` uno de: `arpegios`, `cambios-acordes`, `patrones`, `velocidad`,
+  `tecnica`, `repertorio`, `general`. Si no es válido se usa `general`.
+- `content` según el tipo: para `TAB` es un **documento v2** completo (el
+  formato de tablatura de arriba); para `THEORY` es `{ "kind": "theory",
+  "body": "markdown sencillo" }`.
+- Devuelve solo el objeto JSON, sin texto alrededor.
