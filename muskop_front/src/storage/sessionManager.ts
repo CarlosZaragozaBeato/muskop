@@ -75,6 +75,10 @@ export async function openStoredSession(deviceId: string): Promise<MuskopSession
   }
   active = { deviceId, session: parseSession(stored.data) }
   localStorage.setItem(LAST_SESSION_KEY, deviceId)
+  // Reescribe la sesión ya normalizada: consolida la migración de sesiones
+  // antiguas (ids numéricos → UUID string) en el almacenamiento, sin esperar a
+  // la primera mutación.
+  await persist()
   return active.session
 }
 
