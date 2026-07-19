@@ -22,6 +22,7 @@ import type {
 } from '../types/tab'
 import type { PracticeEntry, Routine } from '../types/routine'
 import { translate as tr } from '../i18n/translate'
+import { saveText } from '../native/share'
 
 // ==========================================================================
 // Gestor de la sesión activa. Es la "base de datos" en memoria: cada
@@ -122,18 +123,10 @@ export function removeDeviceSession(deviceId: string): Promise<unknown> {
   return deleteStoredSession(deviceId)
 }
 
-/** Descarga la sesión activa como archivo .muskop.json */
-export function downloadActiveSession(): void {
+/** Descarga (web) o comparte (Android) la sesión activa como .muskop.json */
+export function downloadActiveSession(): Promise<void> {
   const { session } = requireActive()
-  const blob = new Blob([JSON.stringify(session, null, 2)], {
-    type: 'application/json;charset=utf-8',
-  })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = sessionFilename(session)
-  a.click()
-  URL.revokeObjectURL(url)
+  return saveText(sessionFilename(session), JSON.stringify(session, null, 2))
 }
 
 // ---- CRUD de recursos sobre la sesión activa --------------------------------

@@ -5,6 +5,7 @@ import * as sessions from '../storage/sessionManager'
 import type { ResourceSummary } from '../types/tab'
 import { routineMinutes, type PracticeEntry, type Routine } from '../types/routine'
 import { exportRoutineToJson } from '../utils/routineIO'
+import { saveText } from '../native/share'
 import { useI18n } from '../i18n/I18nContext'
 import {
   dailyAverage,
@@ -62,13 +63,8 @@ export default function RoutinesPage() {
 
   const exportRoutine = (routine: Routine) => {
     const json = exportRoutineToJson(routine, resources)
-    const blob = new Blob([json], { type: 'application/json;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${routine.name.replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim().replace(/\s+/g, '-')}.rutina.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    const safe = routine.name.replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim().replace(/\s+/g, '-')
+    return saveText(`${safe || 'routine'}.rutina.json`, json)
   }
 
   return (

@@ -5,6 +5,7 @@ import { listDeviceSessions, removeDeviceSession } from '../storage/sessionManag
 import type { StoredSession } from '../storage/db'
 import { useI18n } from '../i18n/I18nContext'
 import LanguageSwitcher from '../i18n/LanguageSwitcher'
+import ThemeToggle from '../theme/ThemeToggle'
 
 /**
  * Pantalla de entrada local-first: crear una sesión nueva, importar un
@@ -67,7 +68,10 @@ export default function LoginPage() {
       <div className="login-card session-card">
         <div className="login-top">
           <h1>Muskop</h1>
-          <LanguageSwitcher />
+          <div className="login-top-actions">
+            <ThemeToggle />
+            <LanguageSwitcher />
+          </div>
         </div>
         <p>{t('login.tagline')}</p>
 

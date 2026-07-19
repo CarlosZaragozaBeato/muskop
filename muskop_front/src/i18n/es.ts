@@ -25,6 +25,9 @@ export const es: Dict = {
   lang: {
     label: 'Idioma',
   },
+  theme: {
+    toggle: 'Cambiar claro / oscuro',
+  },
   tab: {
     untitled: 'Sin título',
     tuning: 'Afinación',

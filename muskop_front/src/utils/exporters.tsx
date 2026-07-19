@@ -7,23 +7,16 @@ import {
   type TabLabels,
 } from '../components/tab/tabModel'
 import { translate as tr } from '../i18n/translate'
+import { isNativePlatform, saveFile, saveText } from '../native/share'
 
 // ==========================================================================
-// Exportación: texto (.txt), imagen (PNG) y PDF (vía diálogo de impresión,
-// que produce PDF vectorial sin dependencias externas).
+// Exportación: texto (.txt), imagen (PNG) y PDF. En web el PDF se genera con
+// el diálogo de impresión (vectorial, sin dependencias); en Android se
+// comparte el HTML de las páginas (imprimible a PDF desde un visor).
 // ==========================================================================
 
 function safeFilename(name: string): string {
   return (name || 'tablatura').replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim().replace(/\s+/g, '-')
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 export function documentSvgMarkup(doc: EditorDocument, labels: TabLabels = DEFAULT_TAB_LABELS): string {
@@ -32,9 +25,10 @@ export function documentSvgMarkup(doc: EditorDocument, labels: TabLabels = DEFAU
 
 export function exportText(docs: EditorDocument[], name?: string, labels: TabLabels = DEFAULT_TAB_LABELS) {
   const text = docs.map((doc) => documentToAscii(doc, labels)).join('\n\n' + '='.repeat(60) + '\n\n')
-  downloadBlob(
-    new Blob([text], { type: 'text/plain;charset=utf-8' }),
+  return saveText(
     `${safeFilename(name ?? docs[0]?.title ?? 'tab')}.txt`,
+    text,
+    'text/plain;charset=utf-8',
   )
 }
 
@@ -60,26 +54,30 @@ export async function exportPng(doc: EditorDocument, labels: TabLabels = DEFAULT
       canvas.toBlob(resolve, 'image/png'),
     )
     if (!blob) throw new Error(tr('errors.pngFailed'))
-    downloadBlob(blob, `${safeFilename(doc.title)}.png`)
+    await saveFile(`${safeFilename(doc.title)}.png`, blob, { text: false, title: doc.title })
   } finally {
     URL.revokeObjectURL(url)
   }
 }
 
 /**
- * Abre una ventana de impresión con los documentos renderizados (uno por
- * página). Desde ahí el navegador permite "Guardar como PDF" con calidad
- * vectorial.
+ * Genera un documento con las páginas renderizadas (una por sección). En web
+ * abre el diálogo de impresión ("Guardar como PDF" vectorial); en Android
+ * comparte el .html, imprimible a PDF desde el navegador/visor del sistema.
  */
-export function exportPdf(docs: EditorDocument[], title?: string, labels: TabLabels = DEFAULT_TAB_LABELS) {
+export async function exportPdf(docs: EditorDocument[], title?: string, labels: TabLabels = DEFAULT_TAB_LABELS) {
   const pages = docs
     .map((doc) => `<div class="page">${documentSvgMarkup(doc, labels)}</div>`)
     .join('\n')
+  const name = title ?? docs[0]?.title ?? 'Tablaturas'
+  const printScript = isNativePlatform()
+    ? ''
+    : `<script>window.addEventListener('load', function(){ window.print(); });</script>`
   const html = `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>${title ?? docs[0]?.title ?? 'Tablaturas'}</title>
+<title>${name}</title>
 <style>
   body { margin: 0; }
   .page { page-break-after: always; display: flex; justify-content: center; }
@@ -88,9 +86,13 @@ export function exportPdf(docs: EditorDocument[], title?: string, labels: TabLab
 </style>
 </head>
 <body>${pages}
-<script>window.addEventListener('load', function(){ window.print(); });</script>
+${printScript}
 </body>
 </html>`
+  if (isNativePlatform()) {
+    await saveText(`${safeFilename(name)}.html`, html, 'text/html;charset=utf-8', name)
+    return
+  }
   const win = window.open('', '_blank')
   if (!win) {
     throw new Error(tr('errors.printBlocked'))

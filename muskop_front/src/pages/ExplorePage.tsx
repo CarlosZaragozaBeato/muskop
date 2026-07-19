@@ -6,6 +6,7 @@ import ImportPackDialog from '../components/ImportPackDialog'
 import { buildTabLabels, fromDocument, parseTabContent } from '../components/tab/tabModel'
 import { getExploreItems } from '../data/exploreContent'
 import { exportExercisePack, type PackExerciseInput } from '../utils/exerciseIO'
+import { saveText } from '../native/share'
 import * as sessions from '../storage/sessionManager'
 import { SKILLS } from '../types/routine'
 import { useI18n } from '../i18n/I18nContext'
@@ -27,16 +28,6 @@ interface ExploreEntry {
   resourceId?: string
   doc?: TabDocument
   body?: string
-}
-
-function download(filename: string, text: string) {
-  const blob = new Blob([text], { type: 'application/json;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 import type { Lang } from '../i18n/types'
@@ -160,7 +151,7 @@ export default function ExplorePage() {
       flashNotice(t('explore.nothingToExport'))
       return
     }
-    download('my-exercises.muskoppack.json', exportExercisePack(list))
+    await saveText('my-exercises.muskoppack.json', exportExercisePack(list))
   }
 
   const handleImport = async (exercises: PackExerciseInput[], warnings: string[]) => {

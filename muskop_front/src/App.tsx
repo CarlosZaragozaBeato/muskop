@@ -13,10 +13,16 @@ import TabEditorPage from './pages/TabEditorPage'
 import { NavLink } from 'react-router-dom'
 import { useI18n } from './i18n/I18nContext'
 import LanguageSwitcher from './i18n/LanguageSwitcher'
+import { useTheme } from './theme/ThemeContext'
+import ThemeToggle from './theme/ThemeToggle'
+import { useBackButton } from './native/useBackButton'
+import logoLight from './assets/brand/logotipo-light.svg'
+import logoDark from './assets/brand/logotipo-dark.svg'
 
 function ProtectedLayout() {
   const { user, ready, logout, downloadSession } = useAuth()
   const { t } = useI18n()
+  const { theme } = useTheme()
 
   if (!ready) {
     return null
@@ -29,7 +35,11 @@ function ProtectedLayout() {
     <div className="app-layout">
       <header className="app-header">
         <div className="header-left">
-          <span className="brand">🎸 Muskop</span>
+          <img
+            className="brand-logo"
+            src={theme === 'dark' ? logoDark : logoLight}
+            alt="Muskop"
+          />
           <nav>
             <NavLink to="/">{t('nav.home')}</NavLink>
             <NavLink to="/routines">{t('nav.routines')}</NavLink>
@@ -40,6 +50,7 @@ function ProtectedLayout() {
           </nav>
         </div>
         <div className="header-right">
+          <ThemeToggle />
           <LanguageSwitcher />
           <span className="muted">{user.username}</span>
           <button type="button" title={t('header.sessionTitle')} onClick={downloadSession}>
@@ -56,6 +67,7 @@ function ProtectedLayout() {
 }
 
 export default function App() {
+  useBackButton()
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

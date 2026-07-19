@@ -1,0 +1,9 @@
+<svg width="720" height="200" viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="30" y="30" width="140" height="140" rx="32" fill="#1F2430"/>
+  <line x1="48" y1="58" x2="152" y2="58" stroke="#3A4152" stroke-width="3" stroke-linecap="round"/>
+  <line x1="48" y1="142" x2="152" y2="142" stroke="#3A4152" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="100" cy="100" r="43" fill="#1F2430" stroke="#F2A33C" stroke-width="8"/>
+  <path d="M89 82 L120 100 L89 118 Z" fill="#F2A33C"/>
+  <text x="200" y="128" font-family="Avenir Next, Nunito, Segoe UI, Helvetica, Arial, sans-serif" font-size="84" font-weight="600" fill="#F2A33C">mus</text>
+  <text x="366" y="128" font-family="Avenir Next, Nunito, Segoe UI, Helvetica, Arial, sans-serif" font-size="84" font-weight="600" fill="#1F2430">kop</text>
+</svg>

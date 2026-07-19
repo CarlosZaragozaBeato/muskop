@@ -1,19 +1,45 @@
 :root {
-  --bg: #16171d;
-  --surface: #1f2028;
-  --border: #2e303a;
-  --text: #f3f4f6;
-  --muted: #9ca3af;
-  --accent: #c084fc;
+  /* ---- Paleta de marca Muskop ---- */
+  --brand-amber: #f2a33c;
+  --brand-coral: #e8875b;
+  --brand-ink: #1f2430;
+  --brand-slate: #3a4152;
+  --brand-cream: #f5f1e8;
+
+  /* ---- Tema oscuro (por defecto) ---- */
+  --bg: #1f2430;
+  --surface: #262d3b;
+  --border: #3a4152;
+  --text: #f5f1e8;
+  --muted: #9aa4b6;
+  --accent: #f2a33c;
+  --accent-2: #e8875b;
+  --on-accent: #1f2430;
   --string-color: #6b7280;
   --error: #f87171;
-  --success: #4ade80;
+  --success: #6bd08a;
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   color-scheme: dark;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Tema claro ---- */
+:root[data-theme='light'] {
+  --bg: #f5f1e8;
+  --surface: #ffffff;
+  --border: #e4ddcd;
+  --text: #1f2430;
+  --muted: #6b7280;
+  --accent: #d98a24;
+  --accent-2: #d9713f;
+  --on-accent: #ffffff;
+  --string-color: #9aa4b6;
+  --error: #dc2626;
+  --success: #2f9e54;
+  color-scheme: light;
 }
 
 * {
@@ -88,7 +114,7 @@ button.primary,
 .button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #16171d;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
@@ -105,19 +131,35 @@ button.primary,
   justify-content: space-between;
   align-items: center;
   padding: 1rem 0;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid var(--border);
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.brand {
-  font-size: 1.2rem;
-  font-weight: 700;
+.brand-logo {
+  height: 34px;
+  width: auto;
+  display: block;
+}
+
+.theme-toggle {
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+}
+
+.lang-switcher {
+  padding: 0.3rem 0.4rem;
+  font-size: 0.85rem;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .header-left {
@@ -177,6 +219,19 @@ button.primary,
 
 .login-card h1 {
   margin: 0;
+}
+
+.login-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.login-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .login-card p {
@@ -639,7 +694,7 @@ textarea:focus {
 
 .practice-bpm button.active {
   background: var(--accent);
-  color: #16171d;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
