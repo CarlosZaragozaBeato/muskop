@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { EditorDocument } from './tab/tabModel'
 import { EXAMPLE_JSON, importAuto } from '../utils/importers'
+import { useI18n } from '../i18n/I18nContext'
 
 interface ImportDialogProps {
   onImport: (doc: EditorDocument, mode: 'replace' | 'append') => void
@@ -12,6 +13,7 @@ interface ImportDialogProps {
  * Pensado también para pegar directamente la estructura que devuelva un agente.
  */
 export default function ImportDialog({ onImport, onClose }: ImportDialogProps) {
+  const { t } = useI18n()
   const [text, setText] = useState('')
   const [mode, setMode] = useState<'replace' | 'append'>('replace')
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +30,7 @@ export default function ImportDialog({ onImport, onClose }: ImportDialogProps) {
       const doc = importAuto(text)
       onImport(doc, mode)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo importar')
+      setError(err instanceof Error ? err.message : t('dialogs.importTab.importError'))
     }
   }
 
@@ -42,19 +44,15 @@ export default function ImportDialog({ onImport, onClose }: ImportDialogProps) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Importar tablatura</h3>
+          <h3>{t('dialogs.importTab.title')}</h3>
           <button type="button" onClick={onClose}>✕</button>
         </div>
 
-        <p className="muted">
-          Pega el JSON del documento (formato v2 con secciones, también acepta el
-          v1 antiguo) o una tablatura ASCII. Si se la pides a un agente, cópiale
-          antes el formato de ejemplo.
-        </p>
+        <p className="muted">{t('dialogs.importTab.intro')}</p>
 
         <div className="import-actions">
           <label className="button">
-            📄 Subir archivo
+            📄 {t('common.uploadFile')}
             <input
               type="file"
               accept=".json,.txt,application/json,text/plain"
@@ -63,13 +61,13 @@ export default function ImportDialog({ onImport, onClose }: ImportDialogProps) {
             />
           </label>
           <button type="button" onClick={copyExample}>
-            {copied ? '✓ Copiado' : '📋 Copiar formato de ejemplo'}
+            {copied ? `✓ ${t('common.copied')}` : `📋 ${t('common.copyExample')}`}
           </button>
         </div>
 
         <textarea
           rows={14}
-          placeholder='{"version": 2, "title": "...", "sections": [...]}'
+          placeholder={t('dialogs.importTab.placeholder')}
           value={text}
           onChange={(e) => {
             setText(e.target.value)
@@ -86,7 +84,7 @@ export default function ImportDialog({ onImport, onClose }: ImportDialogProps) {
               checked={mode === 'replace'}
               onChange={() => setMode('replace')}
             />
-            Reemplazar el documento actual
+            {t('dialogs.importTab.replace')}
           </label>
           <label className="radio">
             <input
@@ -94,10 +92,10 @@ export default function ImportDialog({ onImport, onClose }: ImportDialogProps) {
               checked={mode === 'append'}
               onChange={() => setMode('append')}
             />
-            Añadir como secciones nuevas
+            {t('dialogs.importTab.append')}
           </label>
           <button type="button" className="primary" disabled={!text.trim()} onClick={handleImport}>
-            Importar
+            {t('common.import')}
           </button>
         </div>
       </div>

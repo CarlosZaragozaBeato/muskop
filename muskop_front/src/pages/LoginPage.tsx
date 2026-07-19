@@ -3,6 +3,8 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { listDeviceSessions, removeDeviceSession } from '../storage/sessionManager'
 import type { StoredSession } from '../storage/db'
+import { useI18n } from '../i18n/I18nContext'
+import LanguageSwitcher from '../i18n/LanguageSwitcher'
 
 /**
  * Pantalla de entrada local-first: crear una sesión nueva, importar un
@@ -10,6 +12,7 @@ import type { StoredSession } from '../storage/db'
  */
 export default function LoginPage() {
   const { user, ready, createSession, openSession, importSession } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [label, setLabel] = useState('')
@@ -34,7 +37,7 @@ export default function LoginPage() {
       await action()
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error abriendo la sesión')
+      setError(err instanceof Error ? err.message : t('login.errorOpen'))
     } finally {
       setLoading(false)
     }
@@ -52,7 +55,7 @@ export default function LoginPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('¿Eliminar esta sesión del dispositivo? Si no la has descargado, se perderá.')) {
+    if (!window.confirm(t('login.deleteConfirm'))) {
       return
     }
     await removeDeviceSession(id)
@@ -62,30 +65,33 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card session-card">
-        <h1>Muskop</h1>
-        <p>Tu rutina de guitarra · tus datos en tus archivos</p>
+        <div className="login-top">
+          <h1>Muskop</h1>
+          <LanguageSwitcher />
+        </div>
+        <p>{t('login.tagline')}</p>
 
         <form className="session-new" onSubmit={handleCreate}>
           <input
             type="text"
-            placeholder="Nombre de usuario"
+            placeholder={t('login.usernamePlaceholder')}
             value={username}
             autoFocus
             onChange={(e) => setUsername(e.target.value)}
           />
           <input
             type="text"
-            placeholder="Etiqueta (opcional): clásica, eléctrica…"
+            placeholder={t('login.labelPlaceholder')}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
           <button type="submit" className="primary" disabled={loading || !username.trim()}>
-            {loading ? 'Abriendo…' : 'Crear sesión nueva'}
+            {loading ? t('login.opening') : t('login.create')}
           </button>
         </form>
 
         <label className="button session-import">
-          📂 Importar sesión (.muskop.json)
+          {t('login.import')}
           <input
             type="file"
             accept=".json,application/json"
@@ -98,7 +104,7 @@ export default function LoginPage() {
 
         {stored.length > 0 && (
           <div className="session-list">
-            <h3>Sesiones en este dispositivo</h3>
+            <h3>{t('login.deviceSessions')}</h3>
             <ul>
               {stored.map((s) => (
                 <li key={s.id}>
@@ -114,7 +120,7 @@ export default function LoginPage() {
                   </button>
                   <button
                     type="button"
-                    title="Eliminar del dispositivo"
+                    title={t('login.deleteTitle')}
                     onClick={() => handleDelete(s.id)}
                   >
                     🗑
@@ -125,10 +131,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <p className="muted session-hint">
-          Una sesión es un archivo con toda tu librería y rutinas. Descárgala
-          desde la cabecera para llevártela a otro dispositivo o aplicación.
-        </p>
+        <p className="muted session-hint">{t('login.hint')}</p>
       </div>
     </div>
   )

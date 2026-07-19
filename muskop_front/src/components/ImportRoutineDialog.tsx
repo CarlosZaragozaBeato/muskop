@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ResourceSummary } from '../types/tab'
 import type { Routine } from '../types/routine'
 import { EXAMPLE_ROUTINE_JSON, importRoutineFromJson } from '../utils/routineIO'
+import { useI18n } from '../i18n/I18nContext'
 
 interface ImportRoutineDialogProps {
   resources: ResourceSummary[]
@@ -15,6 +16,7 @@ export default function ImportRoutineDialog({
   onImport,
   onClose,
 }: ImportRoutineDialogProps) {
+  const { t } = useI18n()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -30,7 +32,7 @@ export default function ImportRoutineDialog({
       const result = importRoutineFromJson(text, resources)
       onImport(result.routine, result.warnings)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo importar')
+      setError(err instanceof Error ? err.message : t('dialogs.importRoutine.importError'))
     }
   }
 
@@ -44,19 +46,15 @@ export default function ImportRoutineDialog({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Importar rutina</h3>
+          <h3>{t('dialogs.importRoutine.title')}</h3>
           <button type="button" onClick={onClose}>✕</button>
         </div>
 
-        <p className="muted">
-          Pega el JSON de la rutina o sube un archivo. Los recursos se
-          referencian por título (<code>resourceTitle</code>) y se buscan en tu
-          librería al importar.
-        </p>
+        <p className="muted">{t('dialogs.importRoutine.intro')}</p>
 
         <div className="import-actions">
           <label className="button">
-            📄 Subir archivo
+            📄 {t('common.uploadFile')}
             <input
               type="file"
               accept=".json,application/json"
@@ -65,13 +63,13 @@ export default function ImportRoutineDialog({
             />
           </label>
           <button type="button" onClick={copyExample}>
-            {copied ? '✓ Copiado' : '📋 Copiar formato de ejemplo'}
+            {copied ? `✓ ${t('common.copied')}` : `📋 ${t('common.copyExample')}`}
           </button>
         </div>
 
         <textarea
           rows={12}
-          placeholder='{"muskopRoutine": 1, "name": "...", "blocks": [...]}'
+          placeholder={t('dialogs.importRoutine.placeholder')}
           value={text}
           onChange={(e) => {
             setText(e.target.value)
@@ -83,7 +81,7 @@ export default function ImportRoutineDialog({
 
         <div className="modal-footer">
           <button type="button" className="primary" disabled={!text.trim()} onClick={handleImport}>
-            Importar
+            {t('common.import')}
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import * as sessions from '../storage/sessionManager'
 import type { ResourceSummary } from '../types/tab'
 import { routineMinutes, type PracticeEntry, type Routine } from '../types/routine'
 import { exportRoutineToJson } from '../utils/routineIO'
+import { useI18n } from '../i18n/I18nContext'
 import {
   dailyAverage,
   practiceStreak,
@@ -15,6 +16,7 @@ import {
 
 export default function RoutinesPage() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [routines, setRoutines] = useState<Routine[] | null>(null)
   const [log, setLog] = useState<PracticeEntry[]>([])
   const [resources, setResources] = useState<ResourceSummary[]>([])
@@ -27,14 +29,14 @@ export default function RoutinesPage() {
     sessions
       .listRoutines()
       .then((list) => setRoutines([...list]))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error cargando rutinas'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('routines.errorLoad')))
     try {
       setLog([...sessions.getPracticeLog()])
     } catch {
       setLog([])
     }
     sessions.listResources().then(setResources).catch(() => setResources([]))
-  }, [])
+  }, [t])
 
   useEffect(reload, [reload])
 
@@ -53,7 +55,7 @@ export default function RoutinesPage() {
   const total = totalMinutes(log)
 
   const remove = async (routine: Routine) => {
-    if (!window.confirm(`¿Eliminar la rutina «${routine.name}»?`)) return
+    if (!window.confirm(t('routines.deleteConfirm', { name: routine.name }))) return
     await sessions.deleteRoutine(routine.id)
     reload()
   }
@@ -72,10 +74,10 @@ export default function RoutinesPage() {
   return (
     <div className="routines-page">
       <div className="page-header">
-        <h2>Mis rutinas</h2>
+        <h2>{t('routines.title')}</h2>
         <div className="header-actions">
-          <button type="button" onClick={() => setImporting(true)}>⇪ Importar</button>
-          <Link className="button primary" to="/routines/new">✚ Nueva rutina</Link>
+          <button type="button" onClick={() => setImporting(true)}>{t('routines.import')}</button>
+          <Link className="button primary" to="/routines/new">{t('routines.newRoutine')}</Link>
         </div>
       </div>
 
@@ -86,24 +88,24 @@ export default function RoutinesPage() {
         <div className="stats-panel">
           <div className="stat">
             <span className="stat-value">🔥 {streak}</span>
-            <span className="stat-label">racha de días practicando</span>
+            <span className="stat-label">{t('routines.streakLabel')}</span>
           </div>
           <div className="stat">
             <span className="stat-value">{average} min</span>
-            <span className="stat-label">media diaria (últimos 7 días)</span>
+            <span className="stat-label">{t('routines.avgLabel')}</span>
           </div>
           <div className="stat">
             <span className="stat-value">{total} min</span>
-            <span className="stat-label">tiempo total practicado</span>
+            <span className="stat-label">{t('routines.totalLabel')}</span>
           </div>
-          <Link className="button" to="/progress">📈 Ver progreso</Link>
+          <Link className="button" to="/progress">{t('routines.viewProgress')}</Link>
         </div>
       )}
 
       {categories.length > 0 && (
         <div className="library-filters">
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            <option value="">Todas las categorías</option>
+            <option value="">{t('routines.allCategories')}</option>
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -112,11 +114,7 @@ export default function RoutinesPage() {
       )}
 
       {routines !== null && routines.length === 0 && (
-        <p className="muted">
-          Aún no tienes rutinas. Una rutina es una lista de bloques de práctica
-          (duración, BPM objetivo y un recurso de tu librería) que puedes
-          ejecutar con temporizador y metrónomo — o impórtala desde un JSON.
-        </p>
+        <p className="muted">{t('routines.empty')}</p>
       )}
 
       <ul className="library-list">
@@ -125,17 +123,18 @@ export default function RoutinesPage() {
           const completions = timesCompleted(log, routine.id)
           return (
             <li key={routine.id} className="library-row">
-              <span className="badge badge-routine">Rutina</span>
+              <span className="badge badge-routine">{t('routines.badge')}</span>
               <div className="routine-info">
                 <span className="library-item-title">
                   {routine.name}
                   {routine.category && <span className="chip">{routine.category}</span>}
                 </span>
                 <span className="muted">
-                  {routine.blocks.length} bloque{routine.blocks.length === 1 ? '' : 's'} ·{' '}
-                  {routineMinutes(routine)} min
-                  {completions > 0 && ` · completada ${completions} ${completions === 1 ? 'vez' : 'veces'}`}
-                  {completionStreak > 0 && ` · 🔥 ${completionStreak} días seguidos`}
+                  {t(routine.blocks.length === 1 ? 'routines.blockOne' : 'routines.blockMany', { n: routine.blocks.length })}
+                  {' · '}
+                  {t('routines.minutes', { n: routineMinutes(routine) })}
+                  {completions > 0 && ` · ${t(completions === 1 ? 'routines.completedTimesOne' : 'routines.completedTimesMany', { n: completions })}`}
+                  {completionStreak > 0 && ` · ${t('routines.streakDays', { n: completionStreak })}`}
                 </span>
               </div>
               <span className="row-actions">
@@ -145,15 +144,15 @@ export default function RoutinesPage() {
                   disabled={routine.blocks.length === 0}
                   onClick={() => navigate(`/routines/${routine.id}/practice`)}
                 >
-                  ▶ Practicar
+                  {t('routines.practice')}
                 </button>
                 <button type="button" onClick={() => navigate(`/routines/${routine.id}`)}>
-                  Editar
+                  {t('common.edit')}
                 </button>
-                <button type="button" title="Exportar como JSON" onClick={() => exportRoutine(routine)}>
-                  ⤓ JSON
+                <button type="button" title={t('routines.exportTitle')} onClick={() => exportRoutine(routine)}>
+                  {t('routines.exportJson')}
                 </button>
-                <button type="button" onClick={() => remove(routine)}>Eliminar</button>
+                <button type="button" onClick={() => remove(routine)}>{t('common.delete')}</button>
               </span>
             </li>
           )
@@ -168,7 +167,7 @@ export default function RoutinesPage() {
             const id = await sessions.createRoutine(routine)
             setImporting(false)
             setNotice(
-              `Rutina «${routine.name}» importada (#${id})` +
+              t('routines.imported', { name: routine.name, id }) +
                 (warnings.length > 0 ? ` — ${warnings.join(' · ')}` : ''),
             )
             setTimeout(() => setNotice(null), 6000)

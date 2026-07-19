@@ -11,9 +11,12 @@ import RoutineEditorPage from './pages/RoutineEditorPage'
 import RoutinesPage from './pages/RoutinesPage'
 import TabEditorPage from './pages/TabEditorPage'
 import { NavLink } from 'react-router-dom'
+import { useI18n } from './i18n/I18nContext'
+import LanguageSwitcher from './i18n/LanguageSwitcher'
 
 function ProtectedLayout() {
   const { user, ready, logout, downloadSession } = useAuth()
+  const { t } = useI18n()
 
   if (!ready) {
     return null
@@ -28,24 +31,21 @@ function ProtectedLayout() {
         <div className="header-left">
           <span className="brand">🎸 Muskop</span>
           <nav>
-            <NavLink to="/">Inicio</NavLink>
-            <NavLink to="/routines">Rutinas</NavLink>
-            <NavLink to="/progress">Progreso</NavLink>
-            <NavLink to="/explore">Explorar</NavLink>
-            <NavLink to="/library">Librería</NavLink>
-            <NavLink to="/tabs/new">Nueva tablatura</NavLink>
+            <NavLink to="/">{t('nav.home')}</NavLink>
+            <NavLink to="/routines">{t('nav.routines')}</NavLink>
+            <NavLink to="/progress">{t('nav.progress')}</NavLink>
+            <NavLink to="/explore">{t('nav.explore')}</NavLink>
+            <NavLink to="/library">{t('nav.library')}</NavLink>
+            <NavLink to="/tabs/new">{t('nav.newTab')}</NavLink>
           </nav>
         </div>
         <div className="header-right">
+          <LanguageSwitcher />
           <span className="muted">{user.username}</span>
-          <button
-            type="button"
-            title="Descarga tu sesión (.muskop.json): tu librería y rutinas en un archivo"
-            onClick={downloadSession}
-          >
-            ⬇ Sesión
+          <button type="button" title={t('header.sessionTitle')} onClick={downloadSession}>
+            ⬇ {t('header.session')}
           </button>
-          <button type="button" onClick={logout}>Salir</button>
+          <button type="button" onClick={logout}>{t('header.logout')}</button>
         </div>
       </header>
       <main>

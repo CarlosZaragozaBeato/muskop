@@ -140,6 +140,27 @@ Ampliación (2026-07-18):
       desde Explorar, reutilizando los formatos de contenido existentes
       (TabDocument v2 y teoría); formato documentado en `AGENT_CONTEXT.md`.
 
+### Internacionalización (ES/EN) ✅ 2026-07-19
+
+- [x] Soporte de **dos idiomas: inglés (por defecto) y español**, con solución
+      propia sin dependencias (`muskop_front/src/i18n/`): contexto `useI18n()`
+      con función `t()` e interpolación `{var}`, diccionarios `en.ts`/`es.ts`,
+      selector de idioma en la cabecera y en el login. El idioma se guarda a
+      nivel de dispositivo en `localStorage` (`muskop.lang`, por defecto `en`).
+- [x] Traducida toda la interfaz y también el **contenido incluido**
+      (ejercicios, notas de estudio, artículos de teoría y recomendaciones por
+      nivel): la estructura musical es común y solo cambia el texto
+      (`exploreContent.en.ts`, catálogo EN/ES en `skillCatalog.ts`).
+- [x] El render/exportación de tablaturas (`TabSvg`, ASCII/PNG/PDF) recibe las
+      etiquetas traducidas como datos (no vía hook) para funcionar también
+      fuera del árbol de React.
+- Pendiente: los mensajes de error de validación de la capa de datos
+      (importadores/parseo) siguen en español; se traducirán si se decide
+      threadear `t` por esas funciones puras.
+
+Al añadir texto de UI nuevo: crear la clave en **`en.ts` y `es.ts`** y usar
+`t('clave')` (nunca cadenas literales en los componentes).
+
 ### Fase 4 — Móvil (futuro)
 
 - [ ] Llevar la app a móvil. Al ser 100% frontend y basada en archivos, las

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import * as api from '../../api/client'
 import { useAuth } from '../../auth/AuthContext'
+import { useI18n } from '../../i18n/I18nContext'
 import type {
   ChordContent,
   ChordShape,
@@ -25,6 +26,7 @@ export default function InsertFromLibrary({
   onClose,
 }: InsertFromLibraryProps) {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [items, setItems] = useState<ResourceSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,8 +37,8 @@ export default function InsertFromLibrary({
       api.listResources(user.id, { type: 'SNIPPET' }),
     ])
       .then(([chords, snippets]) => setItems([...chords, ...snippets]))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error cargando la librería'))
-  }, [user])
+      .catch((err) => setError(err instanceof Error ? err.message : t('insertLibrary.loadError')))
+  }, [user, t])
 
   const insert = async (item: ResourceSummary) => {
     try {
@@ -49,32 +51,27 @@ export default function InsertFromLibrary({
         onInsertFragment(content.measures)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error insertando el recurso')
+      setError(err instanceof Error ? err.message : t('insertLibrary.insertError'))
     }
   }
 
   return (
     <div className="library-panel">
       <div className="library-panel-header">
-        <strong>Incrustar desde la librería</strong>
+        <strong>{t('insertLibrary.title')}</strong>
         <button type="button" onClick={onClose}>✕</button>
       </div>
       {error && <p className="error">{error}</p>}
-      {items === null && !error && <p className="muted">Cargando…</p>}
-      {items?.length === 0 && (
-        <p className="muted">
-          No tienes acordes ni fragmentos guardados. Usa ♥ en un acorde o
-          «Compás → snippet» para crear reutilizables.
-        </p>
-      )}
+      {items === null && !error && <p className="muted">{t('common.loading')}</p>}
+      {items?.length === 0 && <p className="muted">{t('insertLibrary.empty')}</p>}
       <ul>
         {items?.map((item) => (
           <li key={item.id}>
             <span className={`badge badge-${item.type.toLowerCase()}`}>
-              {item.type === 'CHORD' ? 'Acorde' : 'Fragmento'}
+              {t(`library.types.${item.type.toUpperCase()}`)}
             </span>
             <span className="library-item-title">{item.title}</span>
-            <button type="button" onClick={() => insert(item)}>Insertar</button>
+            <button type="button" onClick={() => insert(item)}>{t('insertLibrary.insert')}</button>
           </li>
         ))}
       </ul>

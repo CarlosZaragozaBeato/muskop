@@ -3,25 +3,22 @@ import { Link, useNavigate } from 'react-router-dom'
 import * as api from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import {
+  buildTabLabels,
   fromDocument,
   parseTabContent,
   type EditorDocument,
 } from '../components/tab/tabModel'
 import { exportPdf, exportPng, exportText } from '../utils/exporters'
 import ExerciseDialog from '../components/ExerciseDialog'
-import { skillLabel } from '../types/routine'
+import { useI18n } from '../i18n/I18nContext'
 import type { CollectionContent, ExerciseMeta, ResourceSummary } from '../types/tab'
 
-const TYPE_LABELS: Record<string, string> = {
-  TAB: 'Tablatura',
-  CHORD: 'Acorde',
-  SNIPPET: 'Fragmento',
-  THEORY: 'Teoría',
-  COLLECTION: 'Colección',
-}
+const TYPE_ORDER = ['TAB', 'CHORD', 'SNIPPET', 'THEORY', 'COLLECTION']
 
 export default function LibraryPage() {
   const { user } = useAuth()
+  const { t } = useI18n()
+  const tabLabels = buildTabLabels(t)
   const navigate = useNavigate()
   const [items, setItems] = useState<ResourceSummary[] | null>(null)
   const [typeFilter, setTypeFilter] = useState('')
@@ -35,8 +32,8 @@ export default function LibraryPage() {
     api
       .listResources(user.id)
       .then(setItems)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error cargando la librería'))
-  }, [user])
+      .catch((err) => setError(err instanceof Error ? err.message : t('library.errorLoad')))
+  }, [user, t])
 
   useEffect(reload, [reload])
 
@@ -73,12 +70,12 @@ export default function LibraryPage() {
       setError(null)
       await action()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error en la exportación')
+      setError(err instanceof Error ? err.message : t('library.errorExport'))
     }
   }
 
   const remove = async (item: ResourceSummary) => {
-    if (!window.confirm(`¿Eliminar «${item.title}»?`)) return
+    if (!window.confirm(t('library.deleteConfirm', { name: item.title }))) return
     await api.deleteResource(item.id)
     reload()
   }
@@ -93,13 +90,13 @@ export default function LibraryPage() {
   return (
     <div className="library-page">
       <div className="page-header">
-        <h2>Librería</h2>
+        <h2>{t('library.title')}</h2>
         <div className="header-actions">
-          <Link className="button" to="/theory/new">+ Teoría</Link>
+          <Link className="button" to="/theory/new">{t('library.addTheory')}</Link>
           <button type="button" onClick={() => setCreatingCollection(true)}>
-            + Colección
+            {t('library.addCollection')}
           </button>
-          <Link className="button primary" to="/tabs/new">✚ Nueva tablatura</Link>
+          <Link className="button primary" to="/tabs/new">{t('library.newTab')}</Link>
         </div>
       </div>
 
@@ -107,22 +104,22 @@ export default function LibraryPage() {
 
       <div className="library-filters">
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option value="">Todos los tipos</option>
-          {Object.entries(TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
+          <option value="">{t('library.allTypes')}</option>
+          {TYPE_ORDER.map((value) => (
+            <option key={value} value={value}>{t(`library.types.${value}`)}</option>
           ))}
         </select>
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-          <option value="">Todas las categorías</option>
+          <option value="">{t('library.allCategories')}</option>
           {categories.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
       </div>
 
-      {items === null && !error && <p className="muted">Cargando…</p>}
+      {items === null && !error && <p className="muted">{t('common.loading')}</p>}
       {items !== null && filtered.length === 0 && (
-        <p className="muted">No hay recursos con esos filtros.</p>
+        <p className="muted">{t('library.empty')}</p>
       )}
 
       <ul className="library-list">
@@ -131,36 +128,36 @@ export default function LibraryPage() {
           return (
             <li key={item.id} className="library-row">
               <span className={`badge badge-${type.toLowerCase()}`}>
-                {TYPE_LABELS[type] ?? item.type}
+                {t(`library.types.${type}`)}
               </span>
               <span className="library-item-title">{item.title}</span>
               {item.category && <span className="chip">{item.category}</span>}
               {item.exercise && (
-                <span className="chip chip-exercise" title="Aparece en Explorar y Progreso">
-                  🎯 {skillLabel(item.exercise.skill)} · nivel {item.exercise.level}
+                <span className="chip chip-exercise" title={t('library.exerciseChipTitle')}>
+                  {t('library.exerciseChip', { skill: t(`skills.${item.exercise.skill}`), level: item.exercise.level })}
                 </span>
               )}
               <span className="row-actions">
                 {type === 'TAB' && (
                   <>
                     <button type="button" onClick={() => navigate(`/tabs/${item.id}`)}>
-                      Editar
+                      {t('common.edit')}
                     </button>
                     <button
                       type="button"
-                      onClick={run(async () => exportText([await loadDocument(item.id)], item.title))}
+                      onClick={run(async () => exportText([await loadDocument(item.id)], item.title, tabLabels))}
                     >
                       .txt
                     </button>
                     <button
                       type="button"
-                      onClick={run(async () => exportPng(await loadDocument(item.id)))}
+                      onClick={run(async () => exportPng(await loadDocument(item.id), tabLabels))}
                     >
                       .png
                     </button>
                     <button
                       type="button"
-                      onClick={run(async () => exportPdf([await loadDocument(item.id)]))}
+                      onClick={run(async () => exportPdf([await loadDocument(item.id)], undefined, tabLabels))}
                     >
                       PDF
                     </button>
@@ -168,31 +165,31 @@ export default function LibraryPage() {
                 )}
                 {type === 'THEORY' && (
                   <button type="button" onClick={() => navigate(`/theory/${item.id}`)}>
-                    Editar
+                    {t('common.edit')}
                   </button>
                 )}
                 {(type === 'TAB' || type === 'THEORY') && (
                   <button type="button" onClick={() => setExerciseTarget(item)}>
-                    {item.exercise ? '🎯 Ejercicio' : '🎯 Marcar'}
+                    {item.exercise ? t('library.isExercise') : t('library.markExercise')}
                   </button>
                 )}
                 {type === 'COLLECTION' && (
                   <>
                     <button
                       type="button"
-                      onClick={run(async () => exportText(await loadCollectionDocs(item), item.title))}
+                      onClick={run(async () => exportText(await loadCollectionDocs(item), item.title, tabLabels))}
                     >
                       .txt
                     </button>
                     <button
                       type="button"
-                      onClick={run(async () => exportPdf(await loadCollectionDocs(item), item.title))}
+                      onClick={run(async () => exportPdf(await loadCollectionDocs(item), item.title, tabLabels))}
                     >
                       PDF
                     </button>
                   </>
                 )}
-                <button type="button" onClick={run(() => remove(item))}>Eliminar</button>
+                <button type="button" onClick={run(() => remove(item))}>{t('common.delete')}</button>
               </span>
             </li>
           )
@@ -239,6 +236,7 @@ function CollectionDialog({
   onClose: () => void
   onCreate: (name: string, ids: string[]) => Promise<void>
 }) {
+  const { t } = useI18n()
   const [name, setName] = useState('')
   const [selected, setSelected] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -253,16 +251,16 @@ function CollectionDialog({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Nueva colección</h3>
+          <h3>{t('library.collection.title')}</h3>
           <button type="button" onClick={onClose}>✕</button>
         </div>
         <input
           type="text"
-          placeholder="Nombre de la colección"
+          placeholder={t('library.collection.namePlaceholder')}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <p className="muted">Elige las tablaturas que la componen:</p>
+        <p className="muted">{t('library.collection.pick')}</p>
         <ul className="collection-picker">
           {tabs.map((tab) => (
             <li key={tab.id}>
@@ -277,7 +275,7 @@ function CollectionDialog({
               </label>
             </li>
           ))}
-          {tabs.length === 0 && <li className="muted">Aún no tienes tablaturas guardadas.</li>}
+          {tabs.length === 0 && <li className="muted">{t('library.collection.noTabs')}</li>}
         </ul>
         {error && <p className="error">{error}</p>}
         <div className="modal-footer">
@@ -287,11 +285,11 @@ function CollectionDialog({
             disabled={!name.trim() || selected.length === 0}
             onClick={() =>
               onCreate(name.trim(), selected).catch((err) =>
-                setError(err instanceof Error ? err.message : 'Error creando la colección'),
+                setError(err instanceof Error ? err.message : t('library.collection.error')),
               )
             }
           >
-            Crear colección
+            {t('library.collection.create')}
           </button>
         </div>
       </div>

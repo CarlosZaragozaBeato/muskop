@@ -16,13 +16,13 @@ import {
   SLOTS_PER_MEASURE,
   STRING_COUNT,
   TECHNIQUES,
+  buildTabLabels,
   cloneMeasure,
   emptyMeasure,
   measureFromDto,
   measureToDto,
   newChordSection,
   newTabSection,
-  sectionKindLabel,
   type Duration,
   type EditorCell,
   type EditorDocument,
@@ -30,6 +30,7 @@ import {
   type EditorTabSection,
 } from './tabModel'
 import { exportPdf, exportPng, exportText } from '../../utils/exporters'
+import { useI18n } from '../../i18n/I18nContext'
 import './TabEditor.css'
 
 interface TabEditorProps {
@@ -40,6 +41,8 @@ interface TabEditorProps {
 
 export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps) {
   const { user } = useAuth()
+  const { t } = useI18n()
+  const tabLabels = buildTabLabels(t)
   const [doc, setDoc] = useState<EditorDocument>(initialDoc)
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
   const [gridSel, setGridSel] = useState<GridSelection | null>(null)
@@ -291,15 +294,15 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
           measures: [measureToDto(section.measures[gridSel.measure], 0)],
         },
       })
-      notify(`Fragmento «${name}» guardado en la librería`)
+      notify(t('tabEditor.snippetSaved', { name }))
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Error guardando el fragmento')
+      notify(err instanceof Error ? err.message : t('tabEditor.snippetError'))
     }
   }
 
   const saveChordToLibrary = async (chord: ChordShape) => {
     if (!user) return
-    const name = window.prompt('Nombre con el que guardarlo:', chord.name || '')
+    const name = window.prompt(t('tabEditor.chordPrompt'), chord.name || '')
     if (!name) return
     try {
       await api.createResource(user.id, {
@@ -308,9 +311,9 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
         category: doc.category,
         content: { kind: 'chord', chord: { ...chord, name: chord.name || name } },
       })
-      notify(`Acorde «${name}» guardado en la librería`)
+      notify(t('tabEditor.chordSaved', { name }))
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Error guardando el acorde')
+      notify(err instanceof Error ? err.message : t('tabEditor.chordError'))
     }
   }
 
@@ -322,7 +325,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
       updateSection(active.id, (s) =>
         s.kind === 'chords' ? { ...s, chords: [...s.chords, chord] } : s,
       )
-      notify(`Acorde ${chord.name} añadido a «${active.name}»`)
+      notify(t('tabEditor.chordAddedTo', { chord: chord.name, section: active.name }))
       return
     }
     if (active && gridSel !== null) {
@@ -331,10 +334,10 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
         const editorString = STRING_COUNT - 1 - i
         setCell(active.id, { ...gridSel, string: editorString }, fret, duration)
       })
-      notify(`Acorde ${chord.name} incrustado en el compás ${gridSel.measure + 1}`)
+      notify(t('tabEditor.chordStamped', { chord: chord.name, n: gridSel.measure + 1 }))
       return
     }
-    notify('Selecciona antes una casilla o una sección de acordes')
+    notify(t('tabEditor.selectFirst'))
   }
 
   const insertFragment = (measures: MeasureDTO[]) => {
@@ -342,7 +345,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
     const targetId =
       active?.id ?? doc.sections.find((s) => s.kind !== 'chords')?.id ?? null
     if (!targetId) {
-      notify('No hay ninguna sección de tablatura donde insertar')
+      notify(t('tabEditor.noTabSection'))
       return
     }
     const insertAt =
@@ -353,7 +356,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
       result.splice(insertAt ?? result.length, 0, ...converted)
       return { ...s, measures: result }
     })
-    notify('Fragmento incrustado')
+    notify(t('tabEditor.fragmentInserted'))
   }
 
   // ------------------------------------------------------------------
@@ -401,21 +404,21 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
     <div className="tab-editor">
       <div className="tab-editor-meta">
         <label>
-          Título
+          {t('tabEditor.titleLabel')}
           <input
             type="text"
             value={doc.title}
-            placeholder="Mi ejercicio"
+            placeholder={t('tabEditor.titlePlaceholder')}
             onChange={(e) => setDoc({ ...doc, title: e.target.value })}
           />
         </label>
         <label>
-          Categoría
+          {t('tabEditor.categoryLabel')}
           <input
             type="text"
             list="categories"
             value={doc.category ?? ''}
-            placeholder="tecnica, ritmo…"
+            placeholder={t('tabEditor.categoryPlaceholder')}
             onChange={(e) => setDoc({ ...doc, category: e.target.value || null })}
           />
           <datalist id="categories">
@@ -428,7 +431,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
           </datalist>
         </label>
         <label>
-          BPM base
+          {t('tabEditor.baseBpm')}
           <input
             type="number"
             min={20}
@@ -443,13 +446,13 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
       </div>
 
       <div className="tab-editor-toolbar">
-        <div className="duration-group" role="group" aria-label="Duración">
+        <div className="duration-group" role="group" aria-label={t('tabEditor.durationAria')}>
           {DURATIONS.map((d) => (
             <button
               key={d.value}
               type="button"
               className={duration === d.value ? 'active' : ''}
-              title={`${d.label} (nuevas notas)`}
+              title={t('tabEditor.durationTitle', { label: t(`durations.${d.value}`) })}
               onClick={() => setDuration(d.value)}
             >
               {d.symbol}
@@ -458,7 +461,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
         </div>
 
         <button type="button" className={playing ? 'active' : ''} onClick={togglePlay}>
-          {playing ? '⏹ Parar' : '▶ Reproducir'}
+          {playing ? t('tabEditor.stop') : t('tabEditor.play')}
         </button>
         <label className="check">
           <input
@@ -466,74 +469,74 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
             checked={metronome}
             onChange={(e) => setMetronome(e.target.checked)}
           />
-          Metrónomo
+          {t('tabEditor.metronome')}
         </label>
 
         <span className="toolbar-sep" />
 
-        <button type="button" onClick={() => setShowImport(true)}>⇪ Importar</button>
+        <button type="button" onClick={() => setShowImport(true)}>{t('tabEditor.import')}</button>
         <div className="export-menu">
-          <button type="button" onClick={() => setShowExport((v) => !v)}>⇩ Exportar</button>
+          <button type="button" onClick={() => setShowExport((v) => !v)}>{t('tabEditor.export')}</button>
           {showExport && (
             <div className="export-dropdown">
               <button
                 type="button"
                 onClick={() => {
-                  exportText([doc])
+                  exportText([doc], undefined, tabLabels)
                   setShowExport(false)
                 }}
               >
-                Texto (.txt)
+                {t('tabEditor.exportTxt')}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  exportPng(doc).catch((err) => notify(err.message))
+                  exportPng(doc, tabLabels).catch((err) => notify(err.message))
                   setShowExport(false)
                 }}
               >
-                Imagen (.png)
+                {t('tabEditor.exportPng')}
               </button>
               <button
                 type="button"
                 onClick={() => {
                   try {
-                    exportPdf([doc])
+                    exportPdf([doc], undefined, tabLabels)
                   } catch (err) {
-                    notify(err instanceof Error ? err.message : 'Error')
+                    notify(err instanceof Error ? err.message : t('tabEditor.genericError'))
                   }
                   setShowExport(false)
                 }}
               >
-                PDF (imprimir)
+                {t('tabEditor.exportPdf')}
               </button>
             </div>
           )}
         </div>
         <button type="button" onClick={() => setShowLibrary((v) => !v)}>
-          ⧉ Incrustar
+          {t('tabEditor.embed')}
         </button>
         <button type="button" onClick={() => setShowPreview((v) => !v)}>
-          {showPreview ? 'Ocultar vista previa' : 'Vista previa'}
+          {showPreview ? t('tabEditor.hidePreview') : t('tabEditor.showPreview')}
         </button>
 
         <span className="toolbar-sep" />
 
         <button type="button" className="primary" disabled={saving} onClick={() => onSave(doc)}>
-          {saving ? 'Guardando…' : 'Guardar'}
+          {saving ? t('tabEditor.saving') : t('tabEditor.save')}
         </button>
       </div>
 
       {activeSection && activeSection.kind !== 'chords' && gridSel !== null && (
         <div className="annotation-bar">
-          <span className="muted">Mano derecha:</span>
+          <span className="muted">{t('tabEditor.rightHand')}</span>
           {FINGERS.map((f) => (
             <button
               key={f.value}
               type="button"
               className={'finger-btn' + (selectedCell?.finger === f.value ? ' active' : '')}
               style={{ '--finger-color': f.color } as React.CSSProperties}
-              title={`${f.label} (tecla ${f.key})`}
+              title={t('tabEditor.fingerTitle', { label: t(`fingers.${f.value}`), key: f.key })}
               disabled={selectedCell === null}
               onClick={() =>
                 updateNote(activeSection.id, gridSel, (cell) => ({
@@ -546,26 +549,30 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
             </button>
           ))}
           <span className="toolbar-sep" />
-          <span className="muted">Técnica:</span>
-          {TECHNIQUES.map((t) => (
+          <span className="muted">{t('tabEditor.technique')}</span>
+          {TECHNIQUES.map((tech) => (
             <button
-              key={t.value}
+              key={tech.value}
               type="button"
-              className={selectedCell?.technique === t.value ? 'active' : ''}
-              title={`${t.label}: ${t.hint} (tecla ${t.key})`}
+              className={selectedCell?.technique === tech.value ? 'active' : ''}
+              title={t('tabEditor.techTitle', {
+                label: t(`techniques.${tech.value}.label`),
+                hint: t(`techniques.${tech.value}.hint`),
+                key: tech.key,
+              })}
               disabled={selectedCell === null}
               onClick={() =>
                 updateNote(activeSection.id, gridSel, (cell) => ({
                   ...cell,
-                  technique: cell.technique === t.value ? null : t.value,
+                  technique: cell.technique === tech.value ? null : tech.value,
                 }))
               }
             >
-              {t.symbol}
+              {tech.symbol}
             </button>
           ))}
           {selectedCell === null && (
-            <span className="muted annotation-hint">— escribe antes un traste en la casilla</span>
+            <span className="muted annotation-hint">{t('tabEditor.annotationHint')}</span>
           )}
         </div>
       )}
@@ -580,17 +587,13 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
         />
       )}
 
-      <p className="tab-editor-help">
-        Clic en una casilla y teclea el traste (0–24). Flechas para moverte,
-        Retroceso para borrar. La regla superior marca los pulsos y debajo de
-        cada compás se ven las duraciones. Cada sección puede tener su propio BPM.
-      </p>
+      <p className="tab-editor-help">{t('tabEditor.help')}</p>
 
       {doc.sections.map((section, si) => (
         <div className="section" key={section.id}>
           <div className="section-header">
             <span className={`badge badge-${section.kind}`}>
-              {sectionKindLabel(section.kind)}
+              {tabLabels.kinds[section.kind]}
             </span>
             <input
               type="text"
@@ -600,8 +603,8 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
                 updateSection(section.id, (s) => ({ ...s, name: e.target.value }))
               }
             />
-            <label className="section-bpm" title="BPM propio; vacío = BPM base">
-              BPM
+            <label className="section-bpm" title={t('tabEditor.sectionBpmTitle')}>
+              {t('tabEditor.sectionBpm')}
               <input
                 type="number"
                 min={20}
@@ -619,29 +622,29 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
 
             {section.kind !== 'chords' && (
               <>
-                <button type="button" onClick={() => addMeasure(section.id)}>+ Compás</button>
+                <button type="button" onClick={() => addMeasure(section.id)}>{t('tabEditor.addMeasure')}</button>
                 <button
                   type="button"
                   disabled={section.measures.length <= 1}
                   onClick={() => removeLastMeasure(section.id)}
                 >
-                  − Compás
+                  {t('tabEditor.removeMeasure')}
                 </button>
                 <button
                   type="button"
                   disabled={activeSectionId !== section.id || gridSel === null}
-                  title="Duplica el compás seleccionado"
+                  title={t('tabEditor.duplicateTitle')}
                   onClick={() => duplicateSelectedMeasure(section.id)}
                 >
-                  ⧉ Duplicar
+                  {t('tabEditor.duplicate')}
                 </button>
                 <button
                   type="button"
                   disabled={activeSectionId !== section.id || gridSel === null}
-                  title="Guarda el compás seleccionado como fragmento reutilizable"
+                  title={t('tabEditor.saveSnippetTitle')}
                   onClick={() => saveMeasureAsSnippet(section)}
                 >
-                  ♥ Compás → snippet
+                  {t('tabEditor.saveSnippet')}
                 </button>
               </>
             )}
@@ -649,10 +652,10 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
             <button
               type="button"
               className={openNotes.has(section.id) || section.notes ? 'active' : ''}
-              title="Notas de estudio: cómo tocar esta sección"
+              title={t('tabEditor.notesTitle')}
               onClick={() => toggleNotes(section.id)}
             >
-              📝 Notas
+              {t('tabEditor.notes')}
             </button>
 
             <span className="section-spacer" />
@@ -669,7 +672,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
             <button
               type="button"
               disabled={doc.sections.length <= 1}
-              title="Eliminar sección"
+              title={t('tabEditor.deleteSectionTitle')}
               onClick={() => removeSection(section.id)}
             >
               ✕
@@ -680,7 +683,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
             <textarea
               className="section-notes"
               rows={2}
-              placeholder="Notas de estudio: postura, qué practicar despacio, en qué fijarse…"
+              placeholder={t('tabEditor.sectionNotesPlaceholder')}
               value={section.notes ?? ''}
               onChange={(e) =>
                 updateSection(section.id, (s) => ({ ...s, notes: e.target.value || null }))
@@ -724,16 +727,16 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
       ))}
 
       <div className="add-section">
-        <span className="muted">Añadir sección:</span>
-        <button type="button" onClick={() => addSection('tab')}>+ Tablatura</button>
-        <button type="button" onClick={() => addSection('chords')}>+ Acordes</button>
-        <button type="button" onClick={() => addSection('arpeggio')}>+ Arpegio</button>
-        <button type="button" onClick={() => addSection('fingerstyle')}>+ Fingerstyle</button>
+        <span className="muted">{t('tabEditor.addSection')}</span>
+        <button type="button" onClick={() => addSection('tab')}>{t('tabEditor.addTab')}</button>
+        <button type="button" onClick={() => addSection('chords')}>{t('tabEditor.addChords')}</button>
+        <button type="button" onClick={() => addSection('arpeggio')}>{t('tabEditor.addArpeggio')}</button>
+        <button type="button" onClick={() => addSection('fingerstyle')}>{t('tabEditor.addFingerstyle')}</button>
       </div>
 
       {showPreview && (
         <div className="preview-panel">
-          <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" />
+          <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" labels={tabLabels} />
         </div>
       )}
 
@@ -749,7 +752,7 @@ export default function TabEditor({ initialDoc, saving, onSave }: TabEditorProps
             setShowImport(false)
             setActiveSectionId(null)
             setGridSel(null)
-            notify(mode === 'replace' ? 'Documento importado' : 'Secciones añadidas')
+            notify(mode === 'replace' ? t('tabEditor.docImported') : t('tabEditor.sectionsAdded'))
           }}
         />
       )}

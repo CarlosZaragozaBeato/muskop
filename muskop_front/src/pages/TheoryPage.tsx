@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TheoryView from '../components/TheoryView'
 import * as sessions from '../storage/sessionManager'
+import { useI18n } from '../i18n/I18nContext'
 import type { TheoryContent } from '../types/tab'
 
 /**
@@ -9,6 +10,7 @@ import type { TheoryContent } from '../types/tab'
  * sencillo (#, ##, -, **negrita**) con vista previa en vivo.
  */
 export default function TheoryPage() {
+  const { t } = useI18n()
   const { id } = useParams()
   const navigate = useNavigate()
   const resourceId = id ?? null
@@ -31,12 +33,12 @@ export default function TheoryPage() {
         setBody((detail.content as TheoryContent).body ?? '')
         setLoaded(true)
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error cargando la teoría'))
-  }, [resourceId])
+      .catch((err) => setError(err instanceof Error ? err.message : t('theoryPage.loadError')))
+  }, [resourceId, t])
 
   const handleSave = async () => {
     if (!title.trim()) {
-      setError('Ponle un título')
+      setError(t('theoryPage.needTitle'))
       return
     }
     setSaving(true)
@@ -54,27 +56,27 @@ export default function TheoryPage() {
       } else {
         await sessions.updateResource(resourceId, payload)
       }
-      setMessage('Teoría guardada')
+      setMessage(t('theoryPage.saved'))
       setTimeout(() => setMessage(null), 2500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setError(err instanceof Error ? err.message : t('theoryPage.saveError'))
     } finally {
       setSaving(false)
     }
   }
 
   if (!loaded && !error) {
-    return <p className="muted">Cargando…</p>
+    return <p className="muted">{t('common.loading')}</p>
   }
 
   return (
     <div className="theory-page">
       <div className="page-header">
-        <h2>{resourceId === null ? 'Nueva teoría' : 'Editar teoría'}</h2>
+        <h2>{resourceId === null ? t('theoryPage.newTitle') : t('theoryPage.editTitle')}</h2>
         <div className="header-actions">
-          <button type="button" onClick={() => navigate('/library')}>← Librería</button>
+          <button type="button" onClick={() => navigate('/library')}>{t('theoryPage.backToLibrary')}</button>
           <button type="button" className="primary" disabled={saving} onClick={handleSave}>
-            {saving ? 'Guardando…' : 'Guardar'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -84,20 +86,20 @@ export default function TheoryPage() {
 
       <div className="tab-editor-meta">
         <label>
-          Título
+          {t('theoryPage.titleLabel')}
           <input
             type="text"
             value={title}
-            placeholder="La mano derecha: PIMA"
+            placeholder={t('theoryPage.titlePlaceholder')}
             onChange={(e) => setTitle(e.target.value)}
           />
         </label>
         <label>
-          Categoría
+          {t('theoryPage.categoryLabel')}
           <input
             type="text"
             value={category}
-            placeholder="teoria, arpegios…"
+            placeholder={t('theoryPage.categoryPlaceholder')}
             onChange={(e) => setCategory(e.target.value)}
           />
         </label>
@@ -105,19 +107,16 @@ export default function TheoryPage() {
 
       <div className="theory-editor">
         <div className="theory-editor-input">
-          <span className="muted">
-            Markdown sencillo: <code># título</code>, <code>## subtítulo</code>,{' '}
-            <code>- lista</code>, <code>**negrita**</code>
-          </span>
+          <span className="muted">{t('theoryPage.markdownHint')}</span>
           <textarea
             rows={22}
             value={body}
-            placeholder={'# Título\n\nExplica el concepto…\n\n## Cómo practicarlo\n\n- Primer paso\n- Segundo paso'}
+            placeholder={t('theoryPage.bodyPlaceholder')}
             onChange={(e) => setBody(e.target.value)}
           />
         </div>
         <div className="theory-editor-preview">
-          <span className="muted">Vista previa</span>
+          <span className="muted">{t('theoryPage.preview')}</span>
           <div className="theory-preview-box">
             <TheoryView body={body || '*'} />
           </div>

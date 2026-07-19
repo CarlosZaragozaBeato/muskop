@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import TheoryView from '../components/TheoryView'
 import TabSvg from '../components/tab/TabSvg'
 import ImportPackDialog from '../components/ImportPackDialog'
-import { fromDocument, parseTabContent } from '../components/tab/tabModel'
-import { EXPLORE_ITEMS } from '../data/exploreContent'
+import { buildTabLabels, fromDocument, parseTabContent } from '../components/tab/tabModel'
+import { getExploreItems } from '../data/exploreContent'
 import { exportExercisePack, type PackExerciseInput } from '../utils/exerciseIO'
 import * as sessions from '../storage/sessionManager'
-import { SKILLS, skillLabel } from '../types/routine'
+import { SKILLS } from '../types/routine'
+import { useI18n } from '../i18n/I18nContext'
 import type { TabDocument, TheoryContent } from '../types/tab'
 
 /**
@@ -38,29 +39,33 @@ function download(filename: string, text: string) {
   URL.revokeObjectURL(url)
 }
 
-const BUILT_IN: ExploreEntry[] = EXPLORE_ITEMS.map((item) =>
-  item.kind === 'exercise'
-    ? {
-        key: `builtin-${item.id}`,
-        kind: 'exercise',
-        title: item.title,
-        skill: item.skill,
-        level: item.level,
-        description: item.description,
-        mine: false,
-        doc: item.doc,
-      }
-    : {
-        key: `builtin-${item.id}`,
-        kind: 'theory',
-        title: item.title,
-        skill: item.skill,
-        level: item.level,
-        description: item.description,
-        mine: false,
-        body: item.body,
-      },
-)
+import type { Lang } from '../i18n/types'
+
+function builtInEntries(lang: Lang): ExploreEntry[] {
+  return getExploreItems(lang).map((item) =>
+    item.kind === 'exercise'
+      ? {
+          key: `builtin-${item.id}`,
+          kind: 'exercise',
+          title: item.title,
+          skill: item.skill,
+          level: item.level,
+          description: item.description,
+          mine: false,
+          doc: item.doc,
+        }
+      : {
+          key: `builtin-${item.id}`,
+          kind: 'theory',
+          title: item.title,
+          skill: item.skill,
+          level: item.level,
+          description: item.description,
+          mine: false,
+          body: item.body,
+        },
+  )
+}
 
 /**
  * Explorar: catálogo de ejercicios fingerstyle y teoría incluidos con la app,
@@ -69,6 +74,7 @@ const BUILT_IN: ExploreEntry[] = EXPLORE_ITEMS.map((item) =>
  */
 export default function ExplorePage() {
   const navigate = useNavigate()
+  const { t, lang } = useI18n()
   const [searchParams, setSearchParams] = useSearchParams()
   const skillFilter = searchParams.get('skill') ?? ''
   const [kindFilter, setKindFilter] = useState('')
@@ -107,7 +113,8 @@ export default function ExplorePage() {
   }, [])
   useEffect(reload, [reload])
 
-  const entries = useMemo(() => [...mine, ...BUILT_IN], [mine])
+  const builtIn = useMemo(() => builtInEntries(lang), [lang])
+  const entries = useMemo(() => [...mine, ...builtIn], [mine, builtIn])
 
   const filtered = useMemo(
     () =>
@@ -144,16 +151,16 @@ export default function ExplorePage() {
       })
     }
     reload()
-    flashNotice(`«${item.title}» añadido a tu librería`)
+    flashNotice(t('explore.added', { name: item.title }))
   }
 
   const exportMine = async () => {
     const list = await sessions.listExercises()
     if (list.length === 0) {
-      flashNotice('Aún no tienes ejercicios propios que exportar')
+      flashNotice(t('explore.nothingToExport'))
       return
     }
-    download('mis-ejercicios.muskoppack.json', exportExercisePack(list))
+    download('my-exercises.muskoppack.json', exportExercisePack(list))
   }
 
   const handleImport = async (exercises: PackExerciseInput[], warnings: string[]) => {
@@ -168,24 +175,22 @@ export default function ExplorePage() {
     }
     setImporting(false)
     reload()
-    const base = `${exercises.length} ejercicio${exercises.length === 1 ? '' : 's'} importado${exercises.length === 1 ? '' : 's'}`
-    flashNotice(warnings.length ? `${base}. Avisos: ${warnings.join('; ')}` : base)
+    const base = t(exercises.length === 1 ? 'explore.importedOne' : 'explore.importedMany', {
+      n: exercises.length,
+    })
+    flashNotice(warnings.length ? `${base}. ${t('explore.warnings', { list: warnings.join('; ') })}` : base)
   }
 
   return (
     <div className="explore-page">
       <div className="page-header">
-        <h2>Explorar</h2>
+        <h2>{t('explore.title')}</h2>
         <div className="header-actions">
-          <button type="button" onClick={() => setImporting(true)}>⇧ Importar pack</button>
-          <button type="button" onClick={exportMine}>⬇ Exportar mis ejercicios</button>
+          <button type="button" onClick={() => setImporting(true)}>{t('explore.importPack')}</button>
+          <button type="button" onClick={exportMine}>{t('explore.exportMine')}</button>
         </div>
       </div>
-      <p className="muted">
-        Ejercicios guiados y teoría incluidos con Muskop, junto a tus propios
-        ejercicios. Marca cualquier tablatura o teoría de tu librería como
-        ejercicio (habilidad y nivel) y aparecerá aquí y en Progreso.
-      </p>
+      <p className="muted">{t('explore.intro')}</p>
 
       {notice && <p className="success">{notice}</p>}
 
@@ -197,29 +202,29 @@ export default function ExplorePage() {
             setSearchParams(value ? { skill: value } : {})
           }}
         >
-          <option value="">Todas las habilidades</option>
+          <option value="">{t('explore.allSkills')}</option>
           {SKILLS.filter((s) => s.id !== 'general').map((s) => (
             <option key={s.id} value={s.id}>
-              {s.icon} {s.label}
+              {s.icon} {t(`skills.${s.id}`)}
             </option>
           ))}
         </select>
         <select value={kindFilter} onChange={(e) => setKindFilter(e.target.value)}>
-          <option value="">Todo el contenido</option>
-          <option value="exercise">Ejercicios</option>
-          <option value="theory">Teoría</option>
+          <option value="">{t('explore.allContent')}</option>
+          <option value="exercise">{t('explore.exercises')}</option>
+          <option value="theory">{t('explore.theory')}</option>
         </select>
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value as '' | 'mine' | 'catalog')}
         >
-          <option value="">Todo el origen</option>
-          <option value="mine">Solo míos</option>
-          <option value="catalog">Solo del catálogo</option>
+          <option value="">{t('explore.allSources')}</option>
+          <option value="mine">{t('explore.onlyMine')}</option>
+          <option value="catalog">{t('explore.onlyCatalog')}</option>
         </select>
       </div>
 
-      {filtered.length === 0 && <p className="muted">No hay contenido con esos filtros.</p>}
+      {filtered.length === 0 && <p className="muted">{t('explore.empty')}</p>}
 
       <div className="explore-grid">
         {filtered.map((item) => {
@@ -228,20 +233,21 @@ export default function ExplorePage() {
             <div className="explore-card" key={item.key}>
               <div className="explore-card-top">
                 <span className={`badge badge-${item.kind === 'theory' ? 'theory' : 'fingerstyle'}`}>
-                  {item.kind === 'theory' ? 'Teoría' : 'Ejercicio'}
+                  {item.kind === 'theory' ? t('explore.badgeTheory') : t('explore.badgeExercise')}
                 </span>
-                {item.mine && <span className="chip chip-exercise">🎯 Tuyo</span>}
+                {item.mine && <span className="chip chip-exercise">{t('explore.mine')}</span>}
                 {item.skill && (
                   <span className="chip">
-                    {skillLabel(item.skill)}
-                    {item.level ? ` · nivel ${item.level}` : ''}
+                    {item.level
+                      ? t('explore.levelChip', { skill: t(`skills.${item.skill}`), level: item.level })
+                      : t(`skills.${item.skill}`)}
                   </span>
                 )}
               </div>
               <strong>{item.title}</strong>
               <p className="muted">{item.description}</p>
               <div className="explore-card-actions">
-                <button type="button" onClick={() => setPreview(item)}>Ver</button>
+                <button type="button" onClick={() => setPreview(item)}>{t('explore.view')}</button>
                 {item.mine ? (
                   <button
                     type="button"
@@ -253,13 +259,13 @@ export default function ExplorePage() {
                       )
                     }
                   >
-                    Editar
+                    {t('common.edit')}
                   </button>
                 ) : owned ? (
-                  <span className="muted">✓ En tu librería</span>
+                  <span className="muted">{t('explore.inLibrary')}</span>
                 ) : (
                   <button type="button" className="primary" onClick={() => addToLibrary(item)}>
-                    + Añadir
+                    {t('explore.add')}
                   </button>
                 )}
               </div>
@@ -277,7 +283,7 @@ export default function ExplorePage() {
             </div>
             {preview.kind === 'exercise' && preview.doc ? (
               <div className="preview-panel">
-                <TabSvg doc={fromDocument(preview.doc)} ink="#e5e7eb" background="#16171d" />
+                <TabSvg doc={fromDocument(preview.doc)} ink="#e5e7eb" background="#16171d" labels={buildTabLabels(t)} />
               </div>
             ) : (
               <TheoryView body={preview.body ?? ''} />
@@ -292,7 +298,7 @@ export default function ExplorePage() {
                     setPreview(null)
                   }}
                 >
-                  + Añadir a mi librería
+                  {t('explore.addToLibrary')}
                 </button>
               </div>
             )}

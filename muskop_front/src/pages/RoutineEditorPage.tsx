@@ -10,10 +10,12 @@ import {
   type PracticeBlock,
   type Routine,
 } from '../types/routine'
+import { useI18n } from '../i18n/I18nContext'
 
 const RESOURCE_TYPES_FOR_BLOCKS = ['TAB', 'CHORD', 'SNIPPET', 'THEORY']
 
 export default function RoutineEditorPage() {
+  const { t } = useI18n()
   const { id } = useParams()
   const navigate = useNavigate()
   const routineId = id ?? null
@@ -49,11 +51,11 @@ export default function RoutineEditorPage() {
           blocks: [...r.blocks],
         }),
       )
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error cargando la rutina'))
-  }, [routineId])
+      .catch((err) => setError(err instanceof Error ? err.message : t('routineEditor.loadError')))
+  }, [routineId, t])
 
   if (routine === null) {
-    return <p className="muted">{error ?? 'Cargando…'}</p>
+    return <p className="muted">{error ?? t('common.loading')}</p>
   }
 
   const updateBlock = (blockId: string, patch: Partial<PracticeBlock>) => {
@@ -82,11 +84,11 @@ export default function RoutineEditorPage() {
 
   const handleSave = async () => {
     if (!routine.name.trim()) {
-      setError('Ponle un nombre a la rutina')
+      setError(t('routineEditor.needName'))
       return
     }
     if (routine.blocks.length === 0) {
-      setError('Añade al menos un bloque')
+      setError(t('routineEditor.needBlock'))
       return
     }
     setSaving(true)
@@ -98,10 +100,10 @@ export default function RoutineEditorPage() {
       } else {
         await sessions.updateRoutine(routineId, routine)
       }
-      setMessage('Rutina guardada')
+      setMessage(t('routineEditor.saved'))
       setTimeout(() => setMessage(null), 2500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setError(err instanceof Error ? err.message : t('routineEditor.saveError'))
     } finally {
       setSaving(false)
     }
@@ -112,11 +114,11 @@ export default function RoutineEditorPage() {
   return (
     <div className="routine-editor-page">
       <div className="page-header">
-        <h2>{routineId === null ? 'Nueva rutina' : 'Editar rutina'}</h2>
+        <h2>{routineId === null ? t('routineEditor.newTitle') : t('routineEditor.editTitle')}</h2>
         <div className="header-actions">
-          <button type="button" onClick={() => navigate('/routines')}>← Rutinas</button>
+          <button type="button" onClick={() => navigate('/routines')}>{t('routineEditor.backToRoutines')}</button>
           <button type="button" className="primary" disabled={saving} onClick={handleSave}>
-            {saving ? 'Guardando…' : 'Guardar'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -126,30 +128,30 @@ export default function RoutineEditorPage() {
 
       <div className="tab-editor-meta">
         <label>
-          Nombre
+          {t('routineEditor.nameLabel')}
           <input
             type="text"
             value={routine.name}
-            placeholder="Rutina de fingerstyle"
+            placeholder={t('routineEditor.namePlaceholder')}
             onChange={(e) => setRoutine({ ...routine, name: e.target.value })}
           />
         </label>
         <label>
-          Descripción
+          {t('routineEditor.descriptionLabel')}
           <input
             type="text"
             value={routine.description ?? ''}
-            placeholder="Objetivo de la rutina…"
+            placeholder={t('routineEditor.descriptionPlaceholder')}
             onChange={(e) => setRoutine({ ...routine, description: e.target.value || null })}
           />
         </label>
         <label>
-          Categoría
+          {t('routineEditor.categoryLabel')}
           <input
             type="text"
             list="routine-categories"
             value={routine.category ?? ''}
-            placeholder="diaria, canción…"
+            placeholder="daily, song…"
             onChange={(e) => setRoutine({ ...routine, category: e.target.value || null })}
           />
           <datalist id="routine-categories">
@@ -158,7 +160,7 @@ export default function RoutineEditorPage() {
             ))}
           </datalist>
         </label>
-        <span className="tab-editor-tuning">Total: {total} min</span>
+        <span className="tab-editor-tuning">{t('routineEditor.totalLabel', { n: total })}</span>
       </div>
 
       <div className="blocks-list">
@@ -170,11 +172,11 @@ export default function RoutineEditorPage() {
                 type="text"
                 className="block-name"
                 value={block.name}
-                placeholder="Nombre del bloque (calentamiento, patrón…)"
+                placeholder={t('routineEditor.blockNamePlaceholder')}
                 onChange={(e) => updateBlock(block.id, { name: e.target.value })}
               />
               <label>
-                Min
+                {t('routineEditor.minutesLabel')}
                 <input
                   type="number"
                   min={1}
@@ -185,21 +187,21 @@ export default function RoutineEditorPage() {
                   }
                 />
               </label>
-              <label title="BPM objetivo; vacío = libre">
-                BPM
+              <label>
+                {t('routineEditor.bpmLabel')}
                 <input
                   type="number"
                   min={20}
                   max={300}
-                  placeholder="libre"
+                  placeholder={t('routineEditor.bpmFree')}
                   value={block.bpm ?? ''}
                   onChange={(e) =>
                     updateBlock(block.id, { bpm: e.target.value ? Number(e.target.value) : null })
                   }
                 />
               </label>
-              <label title="Habilidad que entrena el bloque: gana experiencia al practicarlo">
-                Habilidad
+              <label>
+                {t('routineEditor.skillLabel')}
                 <select
                   value={block.skill ?? ''}
                   onChange={(e) => updateBlock(block.id, { skill: e.target.value || null })}
@@ -207,13 +209,13 @@ export default function RoutineEditorPage() {
                   <option value="">—</option>
                   {SKILLS.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.icon} {s.label}
+                      {s.icon} {t(`skills.${s.id}`)}
                     </option>
                   ))}
                 </select>
               </label>
               <label>
-                Recurso
+                {t('routineEditor.resourceLabel')}
                 <select
                   value={block.resourceId ?? ''}
                   onChange={(e) =>
@@ -222,7 +224,7 @@ export default function RoutineEditorPage() {
                     })
                   }
                 >
-                  <option value="">— sin recurso —</option>
+                  <option value="">{t('routineEditor.resourceNone')}</option>
                   {resources.map((r) => (
                     <option key={r.id} value={r.id}>
                       [{r.type}] {r.title}
@@ -251,7 +253,7 @@ export default function RoutineEditorPage() {
               type="text"
               className="block-notes"
               value={block.notes ?? ''}
-              placeholder="Indicaciones: en qué fijarse durante este bloque…"
+              placeholder={t('routineEditor.notesPlaceholder')}
               onChange={(e) => updateBlock(block.id, { notes: e.target.value || null })}
             />
           </div>
@@ -263,7 +265,7 @@ export default function RoutineEditorPage() {
         className="add-block"
         onClick={() => setRoutine({ ...routine, blocks: [...routine.blocks, newBlock()] })}
       >
-        + Añadir bloque
+        {t('routineEditor.addBlock')}
       </button>
     </div>
   )

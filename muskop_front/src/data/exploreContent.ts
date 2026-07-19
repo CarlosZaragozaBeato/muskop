@@ -487,3 +487,41 @@ Cuando el patrón salga sobre un acorde, practica cambiarlo de acorde sin romper
 ]
 
 export const EXPLORE_ITEMS: ExploreItem[] = [...EXERCISES, ...THEORY_ARTICLES]
+
+// --------------------------------------------------------------------------
+// Selección por idioma. El español es la base (estructura + texto); para
+// inglés se sustituye solo el texto visible por los overrides de
+// exploreContent.en.ts, sin tocar los datos musicales.
+// --------------------------------------------------------------------------
+
+import type { Lang } from '../i18n/types'
+import { EN_EXERCISE_TEXT, EN_THEORY_TEXT } from './exploreContent.en'
+
+function translateExercise(item: ExerciseItem): ExerciseItem {
+  const en = EN_EXERCISE_TEXT[item.id]
+  if (!en) return item
+  const section = item.doc.sections[0]
+  return {
+    ...item,
+    title: en.title,
+    description: en.description,
+    doc: {
+      ...item.doc,
+      title: en.title,
+      sections: [{ ...section, name: en.sectionName, notes: en.sectionNotes }, ...item.doc.sections.slice(1)],
+    },
+  }
+}
+
+function translateTheory(item: TheoryItem): TheoryItem {
+  const en = EN_THEORY_TEXT[item.id]
+  if (!en) return item
+  return { ...item, title: en.title, description: en.description, body: en.body }
+}
+
+export function getExploreItems(lang: Lang): ExploreItem[] {
+  if (lang === 'es') return EXPLORE_ITEMS
+  return EXPLORE_ITEMS.map((item) =>
+    item.kind === 'exercise' ? translateExercise(item) : translateTheory(item),
+  )
+}

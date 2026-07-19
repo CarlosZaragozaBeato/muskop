@@ -369,6 +369,70 @@ export function sectionKindLabel(kind: EditorSection['kind']): string {
   }
 }
 
+// ==========================================================================
+// Etiquetas traducibles para el render (TabSvg) y el export (ASCII/PDF/PNG).
+// Como TabSvg también se renderiza fuera del árbol de React (export con
+// renderToStaticMarkup), las etiquetas se pasan como datos, no vía hook.
+// ==========================================================================
+
+export interface TabLabels {
+  untitled: string
+  tuning: string
+  rightHand: string
+  techniques: string
+  kinds: Record<'tab' | 'arpeggio' | 'fingerstyle' | 'chords', string>
+  fingerNames: Record<Finger, string>
+  techNames: Record<Technique, string>
+}
+
+/** Etiquetas por defecto en inglés (idioma por defecto de la app). */
+export const DEFAULT_TAB_LABELS: TabLabels = {
+  untitled: 'Untitled',
+  tuning: 'Tuning',
+  rightHand: 'Right hand',
+  techniques: 'Techniques',
+  kinds: { tab: 'Tab', arpeggio: 'Arpeggio', fingerstyle: 'Fingerstyle', chords: 'Chords' },
+  fingerNames: { p: 'thumb', i: 'index', m: 'middle', a: 'ring' },
+  techNames: {
+    hammer: 'hammer-on',
+    pull: 'pull-off',
+    slide: 'slide',
+    bend: 'bend',
+    vibrato: 'vibrato',
+    palmMute: 'palm mute',
+    harmonic: 'harmonic',
+  },
+}
+
+/** Construye las etiquetas del render a partir de la función de traducción. */
+export function buildTabLabels(t: (key: string) => string): TabLabels {
+  return {
+    untitled: t('tab.untitled'),
+    tuning: t('tab.tuning'),
+    rightHand: t('legend.rightHand'),
+    techniques: t('legend.techniques'),
+    kinds: {
+      tab: t('tabEditor.kindTab'),
+      arpeggio: t('tabEditor.kindArpeggio'),
+      fingerstyle: t('tabEditor.kindFingerstyle'),
+      chords: t('tabEditor.kindChords'),
+    },
+    fingerNames: {
+      p: t('fingers.p').toLowerCase(),
+      i: t('fingers.i').toLowerCase(),
+      m: t('fingers.m').toLowerCase(),
+      a: t('fingers.a').toLowerCase(),
+    },
+    techNames: Object.fromEntries(
+      TECHNIQUES.map((tech) => [tech.value, t(`techniques.${tech.value}.label`).toLowerCase()]),
+    ) as Record<Technique, string>,
+  }
+}
+
+function kindLabel(labels: TabLabels, kind: EditorSection['kind']): string {
+  return labels.kinds[kind]
+}
+
 /** Descripción compacta de un acorde: x32010 (los trastes >9 van entre paréntesis). */
 export function chordFretsLabel(chord: ChordShape): string {
   return chord.frets
@@ -433,24 +497,24 @@ function measuresToAscii(tuning: string[], measures: EditorMeasure[], withFinger
   return withFingers ? result + '\n' + fingersLine.trimEnd() + '   (* = varios dedos)' : result
 }
 
-export function documentToAscii(doc: EditorDocument): string {
+export function documentToAscii(doc: EditorDocument, labels: TabLabels = DEFAULT_TAB_LABELS): string {
   const parts: string[] = []
-  parts.push(`${doc.title || 'Sin título'}`)
+  parts.push(`${doc.title || labels.untitled}`)
   parts.push(
-    `Afinación: ${doc.tuning.join(' ')} · ${doc.timeSignature} · ${doc.baseBpm} bpm` +
+    `${labels.tuning}: ${doc.tuning.join(' ')} · ${doc.timeSignature} · ${doc.baseBpm} bpm` +
       (doc.category ? ` · [${doc.category}]` : ''),
   )
   let usesTechniques = false
   for (const section of doc.sections) {
     const bpmNote = section.bpm ? ` @ ${section.bpm} bpm` : ''
     parts.push('')
-    parts.push(`== ${section.name} (${sectionKindLabel(section.kind)}${bpmNote}) ==`)
+    parts.push(`== ${section.name} (${kindLabel(labels, section.kind)}${bpmNote}) ==`)
     if (section.notes) {
       parts.push(`   ${section.notes.replace(/\n/g, '\n   ')}`)
     }
     if (section.kind === 'chords') {
       for (const chord of section.chords) {
-        const base = chord.baseFret && chord.baseFret > 1 ? ` traste ${chord.baseFret}` : ''
+        const base = chord.baseFret && chord.baseFret > 1 ? ` +${chord.baseFret}` : ''
         parts.push(`  ${chord.name.padEnd(8)} ${chordFretsLabel(chord)}${base}`)
       }
     } else {
@@ -461,9 +525,12 @@ export function documentToAscii(doc: EditorDocument): string {
   }
   if (usesTechniques) {
     parts.push('')
-    parts.push('Leyenda MD: p=pulgar i=índice m=medio a=anular')
     parts.push(
-      'Técnicas: ' + TECHNIQUES.map((t) => `${t.symbol}=${t.label.toLowerCase()}`).join(' '),
+      `${labels.rightHand}: ` + FINGERS.map((f) => `${f.value}=${labels.fingerNames[f.value]}`).join(' '),
+    )
+    parts.push(
+      `${labels.techniques}: ` +
+        TECHNIQUES.map((tech) => `${tech.symbol}=${labels.techNames[tech.value]}`).join(' '),
     )
   }
   return parts.join('\n')

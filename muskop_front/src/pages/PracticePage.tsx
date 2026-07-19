@@ -8,10 +8,10 @@ import {
   COMPLETION_BONUS,
   GENERAL_SKILL,
   XP_PER_MINUTE,
-  skillLabel,
   todayKey,
   type Routine,
 } from '../types/routine'
+import { useI18n } from '../i18n/I18nContext'
 
 function formatTime(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60)
@@ -24,6 +24,7 @@ function formatTime(totalSeconds: number): string {
  * metrónomo al BPM objetivo y el recurso asociado en pantalla.
  */
 export default function PracticePage() {
+  const { t } = useI18n()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -88,8 +89,8 @@ export default function PracticePage() {
     sessions
       .getRoutine(id)
       .then(setRoutine)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Rutina no encontrada'))
-  }, [id])
+      .catch((err) => setError(err instanceof Error ? err.message : t('practice.notFound')))
+  }, [id, t])
 
   const block = routine?.blocks[blockIndex] ?? null
 
@@ -159,21 +160,21 @@ export default function PracticePage() {
     return <p className="error">{error}</p>
   }
   if (!routine) {
-    return <p className="muted">Cargando…</p>
+    return <p className="muted">{t('common.loading')}</p>
   }
 
   if (finished) {
     return (
       <div className="practice-page practice-finished">
-        <h2>🎉 ¡Rutina completada!</h2>
+        <h2>{t('practice.finishedTitle')}</h2>
         <p className="muted">
-          «{routine.name}» — {routine.blocks.length} bloques hechos.
+          {t('practice.finishedSummary', { name: routine.name, n: routine.blocks.length })}
         </p>
         {earnedXp && Object.keys(earnedXp).length > 0 && (
           <div className="xp-gains">
             {Object.entries(earnedXp).map(([skill, xp]) => (
               <span key={skill} className="xp-gain">
-                +{xp} XP {skillLabel(skill)}
+                {t('practice.xpGain', { xp, skill: t(`skills.${skill}`) })}
               </span>
             ))}
           </div>
@@ -191,10 +192,10 @@ export default function PracticePage() {
               setBlockIndex(0)
             }}
           >
-            Repetir rutina
+            {t('practice.repeatRoutine')}
           </button>
-          <button type="button" onClick={() => navigate('/routines')}>← Rutinas</button>
-          <button type="button" onClick={() => navigate('/progress')}>📈 Progreso</button>
+          <button type="button" onClick={() => navigate('/routines')}>{t('practice.backRoutines')}</button>
+          <button type="button" onClick={() => navigate('/progress')}>{t('practice.progress')}</button>
         </div>
       </div>
     )
@@ -206,7 +207,7 @@ export default function PracticePage() {
         <h2>
           {routine.name}
           <span className="muted practice-progress">
-            {' '}· bloque {blockIndex + 1} de {routine.blocks.length}
+            {t('practice.blockOf', { n: blockIndex + 1, total: routine.blocks.length })}
           </span>
         </h2>
         <button
@@ -218,7 +219,7 @@ export default function PracticePage() {
             navigate('/routines')
           }}
         >
-          ✕ Salir
+          {t('practice.exit')}
         </button>
       </div>
 
@@ -235,14 +236,14 @@ export default function PracticePage() {
               onClick={() => goTo(i)}
             >
               <span className="block-number">{i + 1}</span>
-              <span className="practice-block-name">{b.name || 'Bloque'}</span>
+              <span className="practice-block-name">{b.name || t('practice.blockDefault')}</span>
               <span className="muted">{b.minutes}′</span>
             </button>
           ))}
         </aside>
 
         <main className="practice-main">
-          <h3>{block?.name || 'Bloque'}</h3>
+          <h3>{block?.name || t('practice.blockDefault')}</h3>
           {block?.notes && <p className="practice-notes">{block.notes}</p>}
 
           <div className={'practice-timer' + (secondsLeft <= 10 ? ' ending' : '')}>
@@ -251,16 +252,16 @@ export default function PracticePage() {
 
           <div className="practice-controls">
             <button type="button" onClick={() => setRunning((r) => !r)}>
-              {running ? '⏸ Pausar' : '▶ Continuar'}
+              {running ? t('practice.pause') : t('practice.resume')}
             </button>
             <button type="button" onClick={() => setSecondsLeft((block?.minutes ?? 5) * 60)}>
-              ↺ Reiniciar
+              {t('practice.restart')}
             </button>
             <button type="button" disabled={blockIndex === 0} onClick={() => goTo(blockIndex - 1)}>
-              ← Anterior
+              {t('practice.previous')}
             </button>
             <button type="button" onClick={() => goTo(blockIndex + 1)}>
-              {blockIndex === routine.blocks.length - 1 ? 'Terminar ✓' : 'Siguiente →'}
+              {blockIndex === routine.blocks.length - 1 ? t('practice.finish') : t('practice.next')}
             </button>
           </div>
 
@@ -272,7 +273,7 @@ export default function PracticePage() {
                   className={metronomeOn ? 'active' : ''}
                   onClick={toggleMetronome}
                 >
-                  {metronomeOn ? '⏹ Metrónomo' : '▶ Metrónomo'} · {block.bpm} bpm
+                  {metronomeOn ? t('practice.metronomeOn') : t('practice.metronomeOff')} · {t('practice.bpmSuffix', { bpm: block.bpm })}
                 </button>
                 <span className="beat-dots">
                   {[0, 1, 2, 3].map((b) => (
@@ -281,7 +282,7 @@ export default function PracticePage() {
                 </span>
               </>
             ) : (
-              <span className="muted">Bloque a tempo libre</span>
+              <span className="muted">{t('practice.freeTempoBlock')}</span>
             )}
           </div>
 

@@ -3,6 +3,7 @@ import type { ChordShape } from '../../types/tab'
 import ChordDiagram from './ChordDiagram'
 import { COMMON_CHORDS, emptyChord } from './chords'
 import { chordFretsLabel, type EditorChordSection } from './tabModel'
+import { useI18n } from '../../i18n/I18nContext'
 
 interface ChordSectionEditorProps {
   section: EditorChordSection
@@ -18,6 +19,7 @@ export default function ChordSectionEditor({
   onChange,
   onSaveChord,
 }: ChordSectionEditorProps) {
+  const { t } = useI18n()
   const [libraryChord, setLibraryChord] = useState('')
 
   const update = (index: number, chord: ChordShape) => {
@@ -56,14 +58,14 @@ export default function ChordSectionEditor({
               type="text"
               className="chord-name"
               value={chord.name}
-              placeholder="Nombre"
+              placeholder={t('chordEditor.namePlaceholder')}
               onChange={(e) => update(i, { ...chord, name: e.target.value })}
             />
             <ChordDiagram chord={chord} width={104} onChange={(c) => update(i, c)} />
             <span className="chord-frets muted">{chordFretsLabel(chord)}</span>
             <div className="chord-controls">
-              <label title="Traste base del diagrama">
-                Traste
+              <label title={t('chordEditor.baseFretTitle')}>
+                {t('chordEditor.baseFretLabel')}
                 <input
                   type="number"
                   min={1}
@@ -74,8 +76,8 @@ export default function ChordSectionEditor({
                   }
                 />
               </label>
-              <label title="Pulsos que suena al reproducir">
-                Pulsos
+              <label title={t('chordEditor.beatsTitle')}>
+                {t('chordEditor.beatsLabel')}
                 <input
                   type="number"
                   min={1}
@@ -88,18 +90,18 @@ export default function ChordSectionEditor({
               </label>
             </div>
             <div className="chord-actions">
-              <button type="button" title="Mover a la izquierda" onClick={() => move(i, -1)}>←</button>
-              <button type="button" title="Mover a la derecha" onClick={() => move(i, 1)}>→</button>
+              <button type="button" title={t('chordEditor.moveLeft')} onClick={() => move(i, -1)}>←</button>
+              <button type="button" title={t('chordEditor.moveRight')} onClick={() => move(i, 1)}>→</button>
               {onSaveChord && (
                 <button
                   type="button"
-                  title="Guardar en la librería para reutilizar"
+                  title={t('chordEditor.saveToLibrary')}
                   onClick={() => onSaveChord(chord)}
                 >
                   ♥
                 </button>
               )}
-              <button type="button" title="Eliminar acorde" onClick={() => remove(i)}>✕</button>
+              <button type="button" title={t('chordEditor.deleteChord')} onClick={() => remove(i)}>✕</button>
             </div>
           </div>
         ))}
@@ -110,7 +112,7 @@ export default function ChordSectionEditor({
           value={libraryChord}
           onChange={(e) => addFromLibrary(e.target.value)}
         >
-          <option value="">+ Acorde común…</option>
+          <option value="">{t('chordEditor.commonChord')}</option>
           {COMMON_CHORDS.map((c) => (
             <option key={c.name} value={c.name}>
               {c.name} ({chordFretsLabel(c)})
@@ -118,7 +120,7 @@ export default function ChordSectionEditor({
           ))}
         </select>
         <button type="button" onClick={() => onChange([...section.chords, emptyChord()])}>
-          + Acorde vacío
+          {t('chordEditor.emptyChord')}
         </button>
       </div>
     </div>

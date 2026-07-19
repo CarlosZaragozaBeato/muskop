@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { ChordShape } from '../../types/tab'
 import {
+  DEFAULT_TAB_LABELS,
   FINGERS,
   SLOTS_PER_BEAT,
   SLOTS_PER_MEASURE,
@@ -8,12 +9,12 @@ import {
   TECHNIQUES,
   durationSymbol,
   fingerColor,
-  sectionKindLabel,
   sectionUsesFingerstyle,
   stringLabels,
   techniqueSymbol,
   type EditorDocument,
   type EditorMeasure,
+  type TabLabels,
 } from './tabModel'
 
 // ==========================================================================
@@ -40,6 +41,8 @@ interface TabSvgProps {
   doc: EditorDocument
   ink?: string
   background?: string
+  /** Etiquetas traducibles del render (por defecto, inglés) */
+  labels?: TabLabels
 }
 
 function notesLines(notes: string | null): string[] {
@@ -71,7 +74,12 @@ export function svgHeight(doc: EditorDocument): number {
   return y + MARGIN
 }
 
-export default function TabSvg({ doc, ink = '#111', background = '#fff' }: TabSvgProps) {
+export default function TabSvg({
+  doc,
+  ink = '#111',
+  background = '#fff',
+  labels = DEFAULT_TAB_LABELS,
+}: TabSvgProps) {
   const height = svgHeight(doc)
   const children: ReactNode[] = []
   let y = MARGIN
@@ -79,11 +87,11 @@ export default function TabSvg({ doc, ink = '#111', background = '#fff' }: TabSv
   // Cabecera
   children.push(
     <text key="title" x={MARGIN} y={y + 18} fontSize={22} fontWeight={700} fill={ink}>
-      {doc.title || 'Sin título'}
+      {doc.title || labels.untitled}
     </text>,
   )
   const meta = [
-    `Afinación: ${doc.tuning.join(' ')}`,
+    `${labels.tuning}: ${doc.tuning.join(' ')}`,
     doc.timeSignature,
     `${doc.baseBpm} bpm`,
     ...(doc.category ? [doc.category] : []),
@@ -101,7 +109,7 @@ export default function TabSvg({ doc, ink = '#111', background = '#fff' }: TabSv
       <text key={`h${si}`} x={MARGIN} y={y + 18} fontSize={14} fontWeight={600} fill={ink}>
         {section.name}
         <tspan opacity={0.55} fontWeight={400}>
-          {'  '}({sectionKindLabel(section.kind)}{bpmNote})
+          {'  '}({labels.kinds[section.kind]}{bpmNote})
         </tspan>
       </text>,
     )
@@ -157,23 +165,23 @@ export default function TabSvg({ doc, ink = '#111', background = '#fff' }: TabSv
 
   // leyenda fingerstyle para el que lee la pieza
   if (docUsesFingerstyle(doc)) {
-    const fingersText = FINGERS.map((f) => `${f.value}=${f.label.toLowerCase()}`).join('  ')
-    const techniquesText = TECHNIQUES.map((t) => `${t.symbol}=${t.label.toLowerCase()}`).join('  ')
+    const fingersText = FINGERS.map((f) => `${f.value}=${labels.fingerNames[f.value]}`).join('  ')
+    const techniquesText = TECHNIQUES.map((tech) => `${tech.symbol}=${labels.techNames[tech.value]}`).join('  ')
     children.push(
       <g key="legend">
         <text x={MARGIN} y={y + 12} fontSize={11} fontWeight={600} fill={ink} opacity={0.8}>
-          Mano derecha:{' '}
+          {labels.rightHand}:{' '}
           {FINGERS.map((f) => (
             <tspan key={f.value} fill={f.color} fontWeight={700}>
               {` ${f.value}`}
               <tspan fill={ink} fontWeight={400} opacity={0.75}>
-                ={f.label.toLowerCase()}
+                ={labels.fingerNames[f.value]}
               </tspan>
             </tspan>
           ))}
         </text>
         <text x={MARGIN} y={y + 28} fontSize={11} fill={ink} opacity={0.75}>
-          Técnicas: {techniquesText}
+          {labels.techniques}: {techniquesText}
         </text>
         <desc>{fingersText}</desc>
       </g>,

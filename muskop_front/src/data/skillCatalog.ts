@@ -1,6 +1,9 @@
+import type { Lang } from '../i18n/types'
+
 // ==========================================================================
 // Catálogo de ejercicios recomendados por habilidad y nivel. Es contenido
 // orientativo para la página de progreso: qué practicar en cada nivel.
+// Disponible en español (base) e inglés.
 // ==========================================================================
 
 export interface SkillLevelContent {
@@ -8,7 +11,7 @@ export interface SkillLevelContent {
   items: string[]
 }
 
-export const SKILL_CATALOG: Record<string, SkillLevelContent[]> = {
+const SKILL_CATALOG_ES: Record<string, SkillLevelContent[]> = {
   'cambios-acordes': [
     { level: 1, items: ['Em ↔ Am', 'Em ↔ D', 'Am ↔ Dm', 'Cambia sin mirar la mano izquierda'] },
     { level: 2, items: ['C ↔ G', 'G ↔ D', 'Am ↔ C', 'Un rasgueo por acorde, sin parar el pulso'] },
@@ -46,8 +49,51 @@ export const SKILL_CATALOG: Record<string, SkillLevelContent[]> = {
   ],
 }
 
-export function catalogFor(skillId: string, level: number): SkillLevelContent | null {
-  const entries = SKILL_CATALOG[skillId]
+const SKILL_CATALOG_EN: Record<string, SkillLevelContent[]> = {
+  'cambios-acordes': [
+    { level: 1, items: ['Em ↔ Am', 'Em ↔ D', 'Am ↔ Dm', 'Change without looking at your left hand'] },
+    { level: 2, items: ['C ↔ G', 'G ↔ D', 'Am ↔ C', 'One strum per chord, without stopping the pulse'] },
+    { level: 3, items: ['C ↔ Fmaj7 (mini barre)', 'G ↔ B7', 'D ↔ A', 'Changes at 60 bpm in quarter notes'] },
+    { level: 4, items: ['F (barre) ↔ C', 'Bm ↔ G', 'Full Am–F–C–G progression', 'Changes in eighth notes'] },
+    { level: 5, items: ['Bm ↔ F#m (barre chords)', 'I–V–vi–IV in 4 keys', 'Changes with alternating bass'] },
+  ],
+  arpegios: [
+    { level: 1, items: ['p-i-m-a over open Am and E', 'Each finger its string: p=6th, i=3rd, m=2nd, a=1st'] },
+    { level: 2, items: ['Continuous p-i-m-a-m-i', 'Arpeggio over C ↔ G without cutting', 'At 60 bpm in eighth notes'] },
+    { level: 3, items: ['Basic Travis pattern (alternating bass)', 'Arpeggio with melody on the 1st string'] },
+    { level: 4, items: ['Travis with alternating basses + simultaneous melody', 'Arpeggios over a full progression'] },
+    { level: 5, items: ['Arpeggios with position shifts', 'Harmonics within the arpeggio', 'Rubato and dynamics'] },
+  ],
+  patrones: [
+    { level: 1, items: ['Alternating thumb 6th–4th', 'Metronome at 50 bpm, 4 measures with no mistakes'] },
+    { level: 2, items: ['Thumb 6-4-5-4 with i-m interleaved', 'Same pattern over two chords'] },
+    { level: 3, items: ['Waltz pattern in 3/4', 'Ballad pattern (p-i-m-a-m-i) over a progression'] },
+    { level: 4, items: ['Full ballad pattern with eighth-note changes', 'Displaced accents'] },
+    { level: 5, items: ['Patterns with syncopation', 'Integrated percussive tap', 'Combine two patterns in one piece'] },
+  ],
+  velocidad: [
+    { level: 1, items: ['Chromatic 1-2-3-4 at 60 bpm in quarter notes', 'Strict alternate pick/finger'] },
+    { level: 2, items: ['Chromatic at 80 bpm in eighth notes', 'Fingering 1-3-2-4'] },
+    { level: 3, items: ['Chromatic at 100 bpm', 'One-octave major scale at 80 bpm in eighth notes'] },
+    { level: 4, items: ['Two-octave major scale at 100 bpm', 'Clean sixteenth notes at 70 bpm'] },
+    { level: 5, items: ['Sixteenth notes at 90+ bpm', 'Bursts with dynamics and accents'] },
+  ],
+  tecnica: [
+    { level: 1, items: ['Hammer-on and pull-off on open strings', 'Clean notes without fret buzz'] },
+    { level: 2, items: ['Slurs in the 5-7 pattern on every string', 'In-tune slides between positions'] },
+    { level: 3, items: ['Constant palm mute on the basses', 'Natural harmonics at 12/7/5'] },
+    { level: 4, items: ['In-tune whole- and half-step bends', 'Controlled vibrato'] },
+    { level: 5, items: ['Combine slurs+slides in phrases', 'Artificial harmonics'] },
+  ],
+}
+
+const CATALOGS: Record<Lang, Record<string, SkillLevelContent[]>> = {
+  es: SKILL_CATALOG_ES,
+  en: SKILL_CATALOG_EN,
+}
+
+export function catalogFor(skillId: string, level: number, lang: Lang): SkillLevelContent | null {
+  const entries = CATALOGS[lang][skillId] ?? CATALOGS.en[skillId]
   if (!entries) return null
   // si el nivel supera el catálogo, se queda con el último disponible
   return entries.find((e) => e.level === level) ?? entries[entries.length - 1] ?? null

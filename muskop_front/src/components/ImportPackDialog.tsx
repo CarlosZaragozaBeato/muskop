@@ -4,6 +4,7 @@ import {
   importExercisePack,
   type PackExerciseInput,
 } from '../utils/exerciseIO'
+import { useI18n } from '../i18n/I18nContext'
 
 interface ImportPackDialogProps {
   existingTitles: string[]
@@ -17,6 +18,7 @@ export default function ImportPackDialog({
   onImport,
   onClose,
 }: ImportPackDialogProps) {
+  const { t } = useI18n()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -32,7 +34,7 @@ export default function ImportPackDialog({
       const result = importExercisePack(text, existingTitles)
       onImport(result.exercises, result.warnings)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo importar')
+      setError(err instanceof Error ? err.message : t('dialogs.importPack.importError'))
     }
   }
 
@@ -46,18 +48,15 @@ export default function ImportPackDialog({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Importar pack de ejercicios</h3>
+          <h3>{t('dialogs.importPack.title')}</h3>
           <button type="button" onClick={onClose}>✕</button>
         </div>
 
-        <p className="muted">
-          Pega el JSON del pack o sube un archivo. Cada ejercicio se añade a tu
-          librería con su habilidad y nivel, y aparece en Explorar.
-        </p>
+        <p className="muted">{t('dialogs.importPack.intro')}</p>
 
         <div className="import-actions">
           <label className="button">
-            📄 Subir archivo
+            📄 {t('common.uploadFile')}
             <input
               type="file"
               accept=".json,application/json"
@@ -66,13 +65,13 @@ export default function ImportPackDialog({
             />
           </label>
           <button type="button" onClick={copyExample}>
-            {copied ? '✓ Copiado' : '📋 Copiar formato de ejemplo'}
+            {copied ? `✓ ${t('common.copied')}` : `📋 ${t('common.copyExample')}`}
           </button>
         </div>
 
         <textarea
           rows={12}
-          placeholder='{"muskopExercisePack": 1, "exercises": [...]}'
+          placeholder={t('dialogs.importPack.placeholder')}
           value={text}
           onChange={(e) => {
             setText(e.target.value)
@@ -84,7 +83,7 @@ export default function ImportPackDialog({
 
         <div className="modal-footer">
           <button type="button" className="primary" disabled={!text.trim()} onClick={handleImport}>
-            Importar
+            {t('common.import')}
           </button>
         </div>
       </div>

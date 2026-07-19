@@ -1,4 +1,5 @@
 import type { ChordShape } from '../../types/tab'
+import { useI18n } from '../../i18n/I18nContext'
 
 const FRETS_SHOWN = 4
 
@@ -18,6 +19,7 @@ interface ChordDiagramProps {
  * trastes horizontales, puntos para los dedos y x/o sobre la cejuela.
  */
 export default function ChordDiagram({ chord, width = 96, onChange }: ChordDiagramProps) {
+  const { t } = useI18n()
   const stringGap = width / 7
   const fretGap = stringGap * 1.2
   const left = stringGap
@@ -49,7 +51,7 @@ export default function ChordDiagram({ chord, width = 96, onChange }: ChordDiagr
       viewBox={`0 0 ${width} ${height}`}
       className={'chord-diagram' + (onChange ? ' editable' : '')}
       role="img"
-      aria-label={`Acorde ${chord.name || 'sin nombre'}`}
+      aria-label={t('chordEditor.diagramAria', { name: chord.name || t('chordEditor.unnamed') })}
     >
       {/* cejuela o número de traste base */}
       {baseFret === 1 ? (

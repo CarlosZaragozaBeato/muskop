@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import TabEditor from '../components/tab/TabEditor'
+import { useI18n } from '../i18n/I18nContext'
 import {
   emptyDocument,
   fromDocument,
@@ -13,6 +14,7 @@ import {
 
 export default function TabEditorPage() {
   const { user } = useAuth()
+  const { t } = useI18n()
   const { id } = useParams()
   const navigate = useNavigate()
   const resourceId = id ?? null
@@ -34,13 +36,13 @@ export default function TabEditorPage() {
         doc.category = doc.category ?? detail.category
         setInitialDoc(doc)
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error cargando la tablatura'))
-  }, [resourceId])
+      .catch((err) => setError(err instanceof Error ? err.message : t('tabEditorPage.loadError')))
+  }, [resourceId, t])
 
   const handleSave = async (doc: EditorDocument) => {
     if (!user) return
     if (!doc.title.trim()) {
-      setError('Ponle un título a la tablatura antes de guardar')
+      setError(t('tabEditorPage.needTitle'))
       return
     }
     setSaving(true)
@@ -55,14 +57,14 @@ export default function TabEditorPage() {
     try {
       if (resourceId === null) {
         const newId = await api.createResource(user.id, payload)
-        setMessage(`Tablatura guardada (#${newId})`)
+        setMessage(t('tabEditorPage.saved', { id: newId }))
         navigate(`/tabs/${newId}`, { replace: true })
       } else {
         await api.updateResource(resourceId, payload)
-        setMessage('Cambios guardados')
+        setMessage(t('tabEditorPage.savedChanges'))
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setError(err instanceof Error ? err.message : t('tabEditorPage.saveError'))
     } finally {
       setSaving(false)
     }
@@ -71,12 +73,12 @@ export default function TabEditorPage() {
   return (
     <div className="tab-editor-page">
       <div className="page-header">
-        <h2>{resourceId === null ? 'Nueva tablatura' : 'Editar tablatura'}</h2>
-        <button type="button" onClick={() => navigate('/library')}>← Librería</button>
+        <h2>{resourceId === null ? t('tabEditorPage.newTitle') : t('tabEditorPage.editTitle')}</h2>
+        <button type="button" onClick={() => navigate('/library')}>{t('tabEditorPage.backToLibrary')}</button>
       </div>
       {message && <p className="success">{message}</p>}
       {error && <p className="error">{error}</p>}
-      {initialDoc === null && !error && <p className="muted">Cargando…</p>}
+      {initialDoc === null && !error && <p className="muted">{t('common.loading')}</p>}
       {initialDoc !== null && (
         <TabEditor
           key={resourceId ?? 'new'}

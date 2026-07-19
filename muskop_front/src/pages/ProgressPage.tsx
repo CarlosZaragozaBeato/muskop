@@ -9,6 +9,7 @@ import {
   type PracticeEntry,
 } from '../types/routine'
 import { dailyAverage, practiceStreak, totalMinutes } from '../utils/stats'
+import { useI18n } from '../i18n/I18nContext'
 
 /**
  * Página de progreso: experiencia por habilidad con niveles, y ejercicios
@@ -16,6 +17,7 @@ import { dailyAverage, practiceStreak, totalMinutes } from '../utils/stats'
  */
 export default function ProgressPage() {
   const navigate = useNavigate()
+  const { t, lang } = useI18n()
   const [experience, setExperience] = useState<Record<string, number>>({})
   const [log, setLog] = useState<PracticeEntry[]>([])
   const [exercises, setExercises] = useState<OwnedExercise[]>([])
@@ -54,61 +56,59 @@ export default function ProgressPage() {
   return (
     <div className="progress-page">
       <div className="page-header">
-        <h2>Progreso</h2>
+        <h2>{t('progress.title')}</h2>
       </div>
 
       <div className="stats-panel">
         <div className="stat">
           <span className="stat-value">🔥 {streak}</span>
-          <span className="stat-label">racha de días practicando</span>
+          <span className="stat-label">{t('progress.streakLabel')}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{average} min</span>
-          <span className="stat-label">media diaria (últimos 7 días)</span>
+          <span className="stat-label">{t('progress.avgLabel')}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{total} min</span>
-          <span className="stat-label">tiempo total practicado</span>
+          <span className="stat-label">{t('progress.totalLabel')}</span>
         </div>
       </div>
 
-      <p className="muted">
-        Cada minuto practicado en un bloque suma 10 XP a su habilidad (con un
-        20% extra al completar la rutina). Asigna la habilidad de cada bloque
-        en el editor de rutinas.
-      </p>
+      <p className="muted">{t('progress.intro')}</p>
 
       <div className="skills-grid">
         {ordered.map((skill) => {
           const xp = experience[skill.id] ?? 0
           const info = levelFromXp(xp)
-          const catalog = catalogFor(skill.id, info.level)
+          const catalog = catalogFor(skill.id, info.level, lang)
           const progress = Math.min(100, Math.round((info.xpInLevel / info.xpForNext) * 100))
           const skillExercises = bySkill[skill.id] ?? []
           // los pensados para tu nivel actual o por debajo; si aún no llegas a
           // ninguno, muestra los de nivel más bajo como "próximos"
           const forNow = skillExercises.filter((ex) => ex.level <= info.level)
           const recommended = forNow.length > 0 ? forNow : skillExercises.slice(0, 3)
+          const skillName = t(`skills.${skill.id}`)
+          const levelTitle = t(`levels.${Math.min(info.level, 7)}`)
           return (
             <div className="skill-card" key={skill.id}>
               <div className="skill-header">
                 <span className="skill-icon">{skill.icon}</span>
                 <div>
-                  <strong>{skill.label}</strong>
+                  <strong>{skillName}</strong>
                   <div className="muted">
-                    Nivel {info.level} · {info.title} · {xp} XP
+                    {t('progress.levelLine', { level: info.level, title: levelTitle, xp })}
                   </div>
                 </div>
               </div>
-              <div className="xp-bar" title={`${info.xpInLevel}/${info.xpForNext} XP para el nivel ${info.level + 1}`}>
+              <div className="xp-bar" title={t('progress.xpForNext', { cur: info.xpInLevel, next: info.xpForNext, level: info.level + 1 })}>
                 <div className="xp-bar-fill" style={{ width: `${progress}%` }} />
               </div>
               <div className="muted xp-bar-label">
-                {info.xpInLevel}/{info.xpForNext} XP para nivel {info.level + 1}
+                {t('progress.xpForNext', { cur: info.xpInLevel, next: info.xpForNext, level: info.level + 1 })}
               </div>
               {catalog && (
                 <div className="skill-catalog">
-                  <strong className="muted">Para tu nivel {info.level}:</strong>
+                  <strong className="muted">{t('progress.forYourLevel', { level: info.level })}</strong>
                   <ul>
                     {catalog.items.map((item, i) => (
                       <li key={i}>{item}</li>
@@ -118,7 +118,7 @@ export default function ProgressPage() {
               )}
               {recommended.length > 0 && (
                 <div className="skill-catalog skill-own">
-                  <strong className="muted">Tus ejercicios:</strong>
+                  <strong className="muted">{t('progress.yourExercises')}</strong>
                   <ul>
                     {recommended.map((ex) => (
                       <li key={ex.id}>
@@ -133,7 +133,7 @@ export default function ProgressPage() {
                             )
                           }
                         >
-                          {ex.title} · nivel {ex.level}
+                          {t('progress.exerciseLevel', { title: ex.title, level: ex.level })}
                         </button>
                       </li>
                     ))}
@@ -142,7 +142,7 @@ export default function ProgressPage() {
               )}
               {skill.id !== 'general' && (
                 <Link className="skill-explore-link" to={`/explore?skill=${skill.id}`}>
-                  Ejercicios de {skill.label.toLowerCase()} en Explorar →
+                  {t('progress.exploreLink', { skill: skillName.toLowerCase() })}
                 </Link>
               )}
             </div>

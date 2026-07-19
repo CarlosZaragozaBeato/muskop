@@ -10,7 +10,9 @@ import type {
 import ChordDiagram from './tab/ChordDiagram'
 import TabSvg from './tab/TabSvg'
 import TheoryView from './TheoryView'
+import { useI18n } from '../i18n/I18nContext'
 import {
+  buildTabLabels,
   fromDocument,
   parseTabContent,
   STANDARD_TUNING,
@@ -23,6 +25,7 @@ import {
  * diagrama. Las tablaturas se pueden escuchar.
  */
 export default function ResourceView({ detail }: { detail: ResourceDetail }) {
+  const { t } = useI18n()
   const [playing, setPlaying] = useState(false)
   const player = useRef<TabPlayer | null>(null)
 
@@ -88,16 +91,16 @@ export default function ResourceView({ detail }: { detail: ResourceDetail }) {
   }
 
   if (!doc) {
-    return <p className="muted">Este recurso no se puede previsualizar aquí.</p>
+    return <p className="muted">{t('resourceView.cannotPreview')}</p>
   }
 
   return (
     <div className="resource-view">
       <button type="button" className={playing ? 'active' : ''} onClick={togglePlay}>
-        {playing ? '⏹ Parar' : '▶ Escuchar'}
+        {playing ? t('resourceView.stop') : t('resourceView.listen')}
       </button>
       <div className="resource-view-svg">
-        <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" />
+        <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" labels={buildTabLabels(t)} />
       </div>
     </div>
   )

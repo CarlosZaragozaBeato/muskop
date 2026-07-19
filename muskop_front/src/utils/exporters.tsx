@@ -1,6 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import TabSvg from '../components/tab/TabSvg'
-import { documentToAscii, type EditorDocument } from '../components/tab/tabModel'
+import {
+  DEFAULT_TAB_LABELS,
+  documentToAscii,
+  type EditorDocument,
+  type TabLabels,
+} from '../components/tab/tabModel'
 
 // ==========================================================================
 // Exportación: texto (.txt), imagen (PNG) y PDF (vía diálogo de impresión,
@@ -20,20 +25,20 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-export function documentSvgMarkup(doc: EditorDocument): string {
-  return renderToStaticMarkup(<TabSvg doc={doc} />)
+export function documentSvgMarkup(doc: EditorDocument, labels: TabLabels = DEFAULT_TAB_LABELS): string {
+  return renderToStaticMarkup(<TabSvg doc={doc} labels={labels} />)
 }
 
-export function exportText(docs: EditorDocument[], name?: string) {
-  const text = docs.map(documentToAscii).join('\n\n' + '='.repeat(60) + '\n\n')
+export function exportText(docs: EditorDocument[], name?: string, labels: TabLabels = DEFAULT_TAB_LABELS) {
+  const text = docs.map((doc) => documentToAscii(doc, labels)).join('\n\n' + '='.repeat(60) + '\n\n')
   downloadBlob(
     new Blob([text], { type: 'text/plain;charset=utf-8' }),
-    `${safeFilename(name ?? docs[0]?.title ?? 'tablatura')}.txt`,
+    `${safeFilename(name ?? docs[0]?.title ?? 'tab')}.txt`,
   )
 }
 
-export async function exportPng(doc: EditorDocument, scale = 2): Promise<void> {
-  const markup = documentSvgMarkup(doc)
+export async function exportPng(doc: EditorDocument, labels: TabLabels = DEFAULT_TAB_LABELS, scale = 2): Promise<void> {
+  const markup = documentSvgMarkup(doc, labels)
   const svgBlob = new Blob([markup], { type: 'image/svg+xml;charset=utf-8' })
   const url = URL.createObjectURL(svgBlob)
   try {
@@ -65,9 +70,9 @@ export async function exportPng(doc: EditorDocument, scale = 2): Promise<void> {
  * página). Desde ahí el navegador permite "Guardar como PDF" con calidad
  * vectorial.
  */
-export function exportPdf(docs: EditorDocument[], title?: string) {
+export function exportPdf(docs: EditorDocument[], title?: string, labels: TabLabels = DEFAULT_TAB_LABELS) {
   const pages = docs
-    .map((doc) => `<div class="page">${documentSvgMarkup(doc)}</div>`)
+    .map((doc) => `<div class="page">${documentSvgMarkup(doc, labels)}</div>`)
     .join('\n')
   const html = `<!doctype html>
 <html>
