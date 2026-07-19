@@ -49,6 +49,9 @@
 body {
   margin: 0;
   min-height: 100svh;
+  /* red de seguridad: nada debe provocar scroll lateral de página (los
+     contenidos anchos —tablaturas— scrollean dentro de su propio panel) */
+  overflow-x: clip;
 }
 
 h1,
@@ -166,11 +169,15 @@ button.primary,
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .header-left nav {
   display: flex;
   gap: 0.9rem;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
 }
 
 .header-left nav a {
@@ -187,6 +194,7 @@ button.primary,
 .header-actions {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .page-header {
@@ -194,6 +202,8 @@ button.primary,
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 /* ===== Login ===== */
@@ -203,6 +213,8 @@ button.primary,
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem
+    calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .login-card {
@@ -409,6 +421,7 @@ textarea:focus {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .library-list {
@@ -428,6 +441,7 @@ textarea:focus {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .library-item-title {
@@ -438,6 +452,8 @@ textarea:focus {
   margin-left: auto;
   display: flex;
   gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .row-actions button {
@@ -459,7 +475,7 @@ textarea:focus {
 /* ===== Pantalla de sesiones ===== */
 
 .session-card {
-  width: 26rem;
+  width: min(26rem, 100%);
   text-align: left;
 }
 
@@ -1017,4 +1033,89 @@ textarea:focus {
 
 .skill-explore-link:hover {
   text-decoration: underline;
+}
+
+/* ===== Móvil (teléfonos) ===== */
+
+@media (max-width: 640px) {
+  .app-layout {
+    padding: 0 0.9rem calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-header {
+    margin-bottom: 1.25rem;
+  }
+
+  /* el logotipo comparte fila con los controles; la navegación baja a su
+     propia línea a lo ancho */
+  .brand-logo {
+    height: 28px;
+  }
+
+  .header-left {
+    gap: 0.6rem;
+  }
+
+  .header-left nav {
+    flex-basis: 100%;
+    gap: 0.35rem 0.8rem;
+  }
+
+  .header-left nav a {
+    font-size: 0.95rem;
+    padding: 0.15rem 0;
+  }
+
+  .header-right {
+    gap: 0.4rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  /* formularios del login en columna */
+  .session-new {
+    flex-direction: column;
+  }
+
+  /* tarjetas de estadísticas más compactas */
+  .stats-panel {
+    gap: 0.9rem 1.25rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  /* filas de librería/rutinas: acciones a lo ancho debajo del título */
+  .library-row .row-actions {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  /* editor de rutinas: el nombre del bloque ocupa su línea */
+  .block-name {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  .block-header select {
+    max-width: 100%;
+  }
+
+  /* modo práctica */
+  .practice-timer {
+    font-size: 3rem;
+  }
+
+  .practice-finished {
+    padding: 2rem 0;
+  }
+
+  /* diálogos a pantalla casi completa */
+  .modal {
+    padding: 1rem;
+  }
 }

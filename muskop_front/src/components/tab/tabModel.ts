@@ -142,17 +142,17 @@ export function emptyMeasure(): EditorMeasure {
   }
 }
 
-const TAB_KIND_NAMES: Record<TabKind, string> = {
-  tab: 'Sección',
-  arpeggio: 'Arpegio',
-  fingerstyle: 'Fingerstyle',
+const TAB_KIND_KEYS: Record<TabKind, string> = {
+  tab: 'tabEditor.kindTab',
+  arpeggio: 'tabEditor.kindArpeggio',
+  fingerstyle: 'tabEditor.kindFingerstyle',
 }
 
 export function newTabSection(kind: TabKind, name?: string): EditorTabSection {
   return {
     id: newId(),
     kind,
-    name: name ?? TAB_KIND_NAMES[kind],
+    name: name ?? tr(TAB_KIND_KEYS[kind]),
     bpm: null,
     notes: null,
     measures: [emptyMeasure()],
@@ -160,7 +160,14 @@ export function newTabSection(kind: TabKind, name?: string): EditorTabSection {
 }
 
 export function newChordSection(name?: string): EditorChordSection {
-  return { id: newId(), kind: 'chords', name: name ?? 'Acordes', bpm: null, notes: null, chords: [] }
+  return {
+    id: newId(),
+    kind: 'chords',
+    name: name ?? tr('tabEditor.kindChords'),
+    bpm: null,
+    notes: null,
+    chords: [],
+  }
 }
 
 export function emptyDocument(): EditorDocument {
@@ -170,7 +177,7 @@ export function emptyDocument(): EditorDocument {
     tuning: [...STANDARD_TUNING],
     timeSignature: '4/4',
     baseBpm: 120,
-    sections: [newTabSection('tab', 'Sección 1')],
+    sections: [newTabSection('tab', `${tr('tabEditor.kindTab')} 1`)],
   }
 }
 
@@ -282,7 +289,7 @@ export function fromDocument(dto: TabDocument): EditorDocument {
         return {
           id: section.id ?? newId(),
           kind: 'chords' as const,
-          name: section.name ?? 'Acordes',
+          name: section.name ?? tr('tabEditor.kindChords'),
           bpm: section.bpm ?? null,
           notes: section.notes ?? null,
           chords: (section.chords ?? []).map(normalizeChord),
@@ -293,7 +300,7 @@ export function fromDocument(dto: TabDocument): EditorDocument {
       return {
         id: section.id ?? newId(),
         kind,
-        name: section.name ?? 'Sección',
+        name: section.name ?? tr('tabEditor.kindTab'),
         bpm: section.bpm ?? null,
         notes: section.notes ?? null,
         measures:
@@ -328,7 +335,7 @@ export function fromV1(v1: GuitarTabV1): TabDocument {
     timeSignature: v1.metadata?.timeSignature ?? '4/4',
     baseBpm: v1.metadata?.baseBpm ?? 120,
     sections: [
-      { id: newId(), kind: 'tab', name: 'Sección 1', measures: v1.measures ?? [] },
+      { id: newId(), kind: 'tab', name: `${tr('tabEditor.kindTab')} 1`, measures: v1.measures ?? [] },
     ],
   }
 }
@@ -355,19 +362,6 @@ export function stringLabels(tuning: string[]): string[] {
   // convención de tablatura: la cuerda más aguda se escribe en minúscula
   labels[0] = labels[0].toLowerCase()
   return labels
-}
-
-export function sectionKindLabel(kind: EditorSection['kind']): string {
-  switch (kind) {
-    case 'chords':
-      return 'Acordes'
-    case 'arpeggio':
-      return 'Arpegio'
-    case 'fingerstyle':
-      return 'Fingerstyle'
-    default:
-      return 'Tablatura'
-  }
 }
 
 // ==========================================================================
