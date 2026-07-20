@@ -10,6 +10,7 @@ import {
 } from '../components/tab/tabModel'
 import { exportPdf, exportPng, exportText } from '../utils/exporters'
 import ExerciseDialog from '../components/ExerciseDialog'
+import ResourceViewDialog from '../components/ResourceViewDialog'
 import { useI18n } from '../i18n/I18nContext'
 import type { CollectionContent, ExerciseMeta, ResourceSummary } from '../types/tab'
 
@@ -26,6 +27,7 @@ export default function LibraryPage() {
   const [error, setError] = useState<string | null>(null)
   const [creatingCollection, setCreatingCollection] = useState(false)
   const [exerciseTarget, setExerciseTarget] = useState<ResourceSummary | null>(null)
+  const [viewTarget, setViewTarget] = useState<ResourceSummary | null>(null)
 
   const reload = useCallback(() => {
     if (!user) return
@@ -138,6 +140,11 @@ export default function LibraryPage() {
                 </span>
               )}
               <span className="row-actions">
+                {type !== 'COLLECTION' && (
+                  <button type="button" onClick={() => setViewTarget(item)}>
+                    👁 {t('common.view')}
+                  </button>
+                )}
                 {type === 'TAB' && (
                   <>
                     <button type="button" onClick={() => navigate(`/tabs/${item.id}`)}>
@@ -195,6 +202,14 @@ export default function LibraryPage() {
           )
         })}
       </ul>
+
+      {viewTarget && (
+        <ResourceViewDialog
+          id={viewTarget.id}
+          title={viewTarget.title}
+          onClose={() => setViewTarget(null)}
+        />
+      )}
 
       {exerciseTarget && (
         <ExerciseDialog

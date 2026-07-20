@@ -162,12 +162,80 @@ Ampliación (2026-07-18):
 Al añadir texto de UI nuevo: crear la clave en **`en.ts` y `es.ts`** y usar
 `t('clave')` (nunca cadenas literales en los componentes).
 
-### Fase 4 — Móvil (futuro)
+### Fase 4 — Móvil (en curso)
 
-- [ ] Llevar la app a móvil. Al ser 100% frontend y basada en archivos, las
-      opciones naturales son PWA (instalable, offline) o empaquetado
-      (Capacitor). Decidir cuando llegue el momento; la arquitectura
-      local-first ya lo facilita.
+- [x] Empaquetado con **Capacitor** (`muskop_front/capacitor.config.ts`,
+      `appId: com.muskop.app`) y proyecto Android generado (`android/`).
+      Build del APK con JDK21 (`~/jdk21`) + SDK (`~/android-sdk`) y `gradlew`.
+- [ ] Pulir la experiencia móvil (ver Fase 5: navegación estilo mobile,
+      settings, zoom de imágenes, etc.).
+
+> **Regla de paridad:** todo lo que se implemente para Android debe
+> implementarse también en la web. La base es la misma app (100% frontend);
+> no se hacen funciones exclusivas de móvil salvo integraciones nativas
+> inevitables (p. ej. compartir con el SO), y aun así con equivalente web.
+
+### Fase 5 — Experiencia de usuario y gestión de recursos (planificada)
+
+> Recogida (2026-07-20). Objetivo: interfaz más limpia y "mobile-first",
+> recursos multimedia y gamificación general. Cada punto se implementa por
+> igual en web y en Android (regla de paridad de la Fase 4). Ordenada por
+> prioridad; dentro de cada nivel, de arriba abajo.
+
+#### Prioridad alta — pulido de UX y base de navegación
+
+Cambios pequeños y de alto impacto, y la reestructuración de navegación de la
+que dependen puntos posteriores.
+
+- [x] **No auto-iniciar** la rutina al entrar en el modo práctica ✅ 2026-07-20:
+      pantalla previa con resumen de bloques (nombre, habilidad, minutos y BPM
+      / tempo libre) y tiempo total; el temporizador solo arranca al pulsar
+      «Empezar» (`PracticePage.tsx`, estado `started`).
+- [x] **Botón de visualización** del recurso desde la Librería ✅ 2026-07-20:
+      botón «👁 Ver» en cada fila (tablaturas, acordes, fragmentos y teoría)
+      que abre un visor modal de solo lectura reutilizando `ResourceView`
+      (`ResourceViewDialog.tsx`), sin entrar al editor.
+- [x] **Zoom** en el visor de recursos ✅ 2026-07-20: controles −/%/+ en la
+      barra del visor que escalan el render SVG de tablaturas/fragmentos
+      (0,5×–3×, con scroll horizontal), en `ResourceView`. Reutilizable para
+      las imágenes cuando existan recursos de imagen (prioridad media).
+- [x] **Barra superior más limpia** + **menú de Settings** específico
+      ✅ 2026-07-20: nueva página `/settings` (`SettingsPage.tsx`) que agrupa
+      tema, idioma, descarga de sesión y cuenta (logout). La cabecera derecha
+      queda solo con el usuario y un icono ⚙️ hacia Ajustes. *(Base para la
+      sección de Recursos en Settings.)*
+- [x] **Barra de navegación estilo mobile** ✅ 2026-07-20: navegación principal
+      con iconos en una lista compartida (`NAV_ITEMS` en `App.tsx`). En móvil
+      (≤640px) se convierte en una **barra inferior fija** (icono + etiqueta,
+      con `safe-area-inset`) y se oculta la nav superior; en escritorio sigue
+      arriba. 5 secciones (Inicio, Rutinas, Progreso, Explorar, Librería);
+      «Nueva tablatura» se accede desde la Librería y Ajustes desde el ⚙️.
+
+#### Prioridad media — recursos multimedia y su gestión
+
+- [ ] **Subir recursos de imagen, audio y vídeo** (con límite de tamaño
+      razonable — no admitir archivos muy grandes). Nuevo(s) tipo(s) de
+      recurso multimedia dentro de la sesión. *(Habilita el zoom/visor sobre
+      contenido propio y la exportación opcional.)*
+- [ ] Nueva sección **Resources** dentro de Settings: vista central de **todos
+      los recursos** para administrarlos en un solo sitio, con **importar /
+      exportar** (masivo e **individual**), **editar**, **eliminar** y
+      **visualizar** cada recurso, sin entrar en una sección por tipo.
+- [ ] **Exportación opcional de los archivos multimedia** al exportar la
+      sesión: un **check deshabilitado por defecto**; si no se marca, la
+      sesión se exporta sin los binarios pesados de los recursos.
+
+#### Prioridad baja — gamificación y compartir
+
+Funcionalidades más grandes y menos bloqueantes.
+
+- [ ] **Nivel general** del usuario, además del nivel por habilidad ya
+      existente: puntos de experiencia por completar **rutinas** y por cumplir
+      **objetivos semanales, mensuales y anuales**.
+- [ ] **Logros (achievements)** para el usuario de la sesión (desbloqueables
+      por hitos: rachas, objetivos, niveles, etc.).
+- [ ] **Compartir sesiones por correo** (adjuntar/enviar el archivo de sesión;
+      en móvil vía el compartir nativo del SO, en web equivalente).
 
 ## Decisiones tomadas (2026-07-19)
 
