@@ -16,6 +16,7 @@ import {
 } from './session'
 import type {
   ExerciseMeta,
+  MediaContent,
   ResourceDetail,
   ResourceSummary,
   SaveResourceRequest,
@@ -123,10 +124,40 @@ export function removeDeviceSession(deviceId: string): Promise<unknown> {
   return deleteStoredSession(deviceId)
 }
 
-/** Descarga (web) o comparte (Android) la sesión activa como .muskop.json */
-export function downloadActiveSession(): Promise<void> {
+/** ¿Tiene la sesión activa algún recurso multimedia con binario? */
+export function activeSessionHasMedia(): boolean {
+  const session = getActiveSession()
+  return !!session?.resources.some(
+    (r) => r.type.toUpperCase() === 'MEDIA' && !!(r.content as MediaContent)?.data,
+  )
+}
+
+/**
+ * Devuelve una copia de la sesión sin los binarios de los recursos multimedia:
+ * conserva los metadatos (título, tipo, mediaType, mime, nombre, tamaño) pero
+ * vacía `data`, para que la exportación no arrastre archivos pesados.
+ */
+function stripMediaBinaries(session: MuskopSession): MuskopSession {
+  return {
+    ...session,
+    resources: session.resources.map((r) => {
+      if (r.type.toUpperCase() === 'MEDIA' && r.content && typeof r.content === 'object') {
+        return { ...r, content: { ...(r.content as MediaContent), data: '' } }
+      }
+      return r
+    }),
+  }
+}
+
+/**
+ * Descarga (web) o comparte (Android) la sesión activa como .muskop.json.
+ * Por defecto **excluye** los binarios multimedia (pueden ser grandes); pasa
+ * `includeMedia: true` para incluirlos.
+ */
+export function downloadActiveSession(includeMedia = false): Promise<void> {
   const { session } = requireActive()
-  return saveText(sessionFilename(session), JSON.stringify(session, null, 2))
+  const data = includeMedia ? session : stripMediaBinaries(session)
+  return saveText(sessionFilename(session), JSON.stringify(data, null, 2))
 }
 
 // ---- CRUD de recursos sobre la sesión activa --------------------------------

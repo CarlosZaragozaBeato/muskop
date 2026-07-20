@@ -134,6 +134,9 @@ export default function ResourceView({ detail }: { detail: ResourceDetail }) {
 
   if (detail.type.toUpperCase() === 'MEDIA') {
     const media = detail.content as MediaContent
+    if (!media.data) {
+      return <p className="muted">{t('resourceView.mediaMissing')}</p>
+    }
     if (media.mediaType === 'image') {
       return (
         <div className="resource-view">

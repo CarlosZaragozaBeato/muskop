@@ -115,6 +115,7 @@ export const en: Dict = {
     language: 'Language',
     sessionSection: 'Session',
     sessionDesc: 'Download your session (.muskop.json): your library and routines in one file.',
+    includeMedia: 'Include media files (images, audio, video) — larger file',
     downloadSession: '⬇ Download session',
     account: 'Account',
     loggedInAs: 'Signed in as {name}',
@@ -384,6 +385,7 @@ export const en: Dict = {
     zoomOut: 'Zoom out',
     zoomReset: 'Reset zoom',
     mediaUnsupported: 'Your browser can’t play this file.',
+    mediaMissing: 'This media file wasn’t included when the session was exported.',
   },
   media: {
     title: 'Add media',

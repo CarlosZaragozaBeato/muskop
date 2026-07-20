@@ -229,9 +229,12 @@ que dependen puntos posteriores.
       e **importar / exportar en bloque**. Formato portable `muskopResources: 1`
       (`utils/resourceIO.ts`); al importar se crean recursos nuevos (id nuevo)
       para no colisionar.
-- [ ] **Exportación opcional de los archivos multimedia** al exportar la
-      sesión: un **check deshabilitado por defecto**; si no se marca, la
-      sesión se exporta sin los binarios pesados de los recursos.
+- [x] **Exportación opcional de los archivos multimedia** ✅ 2026-07-20:
+      `downloadActiveSession(includeMedia=false)` excluye por defecto los
+      binarios (vacía `data` de los recursos MEDIA conservando los metadatos);
+      en Ajustes hay un **check «incluir multimedia» desactivado por defecto**
+      que solo aparece si la sesión tiene multimedia. El visor avisa si un
+      recurso multimedia se exportó sin su archivo (`resourceView.mediaMissing`).
 
 #### Prioridad baja — gamificación y compartir
 

@@ -1,7 +1,9 @@
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useI18n } from '../i18n/I18nContext'
 import LanguageSwitcher from '../i18n/LanguageSwitcher'
+import { activeSessionHasMedia } from '../storage/sessionManager'
 import ThemeToggle from '../theme/ThemeToggle'
 
 /**
@@ -13,6 +15,8 @@ export default function SettingsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { user, downloadSession, logout } = useAuth()
+  const hasMedia = useMemo(() => activeSessionHasMedia(), [])
+  const [includeMedia, setIncludeMedia] = useState(false)
 
   return (
     <div className="settings-page">
@@ -45,8 +49,18 @@ export default function SettingsPage() {
       <section className="settings-section">
         <h3>{t('settings.sessionSection')}</h3>
         <p className="muted">{t('settings.sessionDesc')}</p>
+        {hasMedia && (
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={includeMedia}
+              onChange={(e) => setIncludeMedia(e.target.checked)}
+            />
+            {t('settings.includeMedia')}
+          </label>
+        )}
         <div className="settings-row">
-          <button type="button" onClick={downloadSession}>
+          <button type="button" onClick={() => downloadSession(includeMedia)}>
             {t('settings.downloadSession')}
           </button>
         </div>

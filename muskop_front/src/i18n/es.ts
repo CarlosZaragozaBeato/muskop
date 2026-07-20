@@ -115,6 +115,7 @@ export const es: Dict = {
     language: 'Idioma',
     sessionSection: 'Sesión',
     sessionDesc: 'Descarga tu sesión (.muskop.json): tu librería y rutinas en un archivo.',
+    includeMedia: 'Incluir los archivos multimedia (imágenes, audio, vídeo) — archivo más grande',
     downloadSession: '⬇ Descargar sesión',
     account: 'Cuenta',
     loggedInAs: 'Sesión de {name}',
@@ -384,6 +385,7 @@ export const es: Dict = {
     zoomOut: 'Alejar',
     zoomReset: 'Restablecer zoom',
     mediaUnsupported: 'Tu navegador no puede reproducir este archivo.',
+    mediaMissing: 'Este archivo multimedia no se incluyó al exportar la sesión.',
   },
   media: {
     title: 'Añadir multimedia',
