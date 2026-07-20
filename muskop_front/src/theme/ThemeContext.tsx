@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { applyThemeToStatusBar } from '../native/statusBar'
 
 // ==========================================================================
 // Tema claro/oscuro. Se guarda por dispositivo en localStorage
@@ -39,6 +40,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     localStorage.setItem(STORAGE_KEY, theme)
+    void applyThemeToStatusBar(theme)
   }, [theme])
 
   const setTheme = useCallback((next: Theme) => setThemeState(next), [])
