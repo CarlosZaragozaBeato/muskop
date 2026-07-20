@@ -167,8 +167,13 @@ Al añadir texto de UI nuevo: crear la clave en **`en.ts` y `es.ts`** y usar
 - [x] Empaquetado con **Capacitor** (`muskop_front/capacitor.config.ts`,
       `appId: com.muskop.app`) y proyecto Android generado (`android/`).
       Build del APK con JDK21 (`~/jdk21`) + SDK (`~/android-sdk`) y `gradlew`.
-- [ ] Pulir la experiencia móvil (ver Fase 5: navegación estilo mobile,
-      settings, zoom de imágenes, etc.).
+- [x] Pulir la experiencia móvil ✅ 2026-07-20: la navegación, settings y
+      visores ya son mobile-first (Fase 5). Añadido: **barra de estado nativa
+      coordinada con el tema** (`@capacitor/status-bar` + `native/statusBar.ts`;
+      iconos claros/oscuros según el tema y `theme-color` dinámico para web/PWA),
+      y **feedback táctil** (sin flash gris, sin rebote de overscroll, escala al
+      pulsar, áreas de toque de la barra inferior ≥3rem). Auditoría a 393px sin
+      overflow horizontal ni errores de consola.
 
 > **Regla de paridad:** todo lo que se implemente para Android debe
 > implementarse también en la web. La base es la misma app (100% frontend);

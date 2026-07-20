@@ -52,6 +52,9 @@ body {
   /* red de seguridad: nada debe provocar scroll lateral de página (los
      contenidos anchos —tablaturas— scrollean dentro de su propio panel) */
   overflow-x: clip;
+  /* sensación nativa en móvil: sin flash gris al tocar ni rebote de overscroll */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 h1,
@@ -111,6 +114,12 @@ button:hover:not(:disabled),
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* feedback táctil al pulsar (hover no existe en móvil) */
+button:not(:disabled):active,
+.button:active {
+  transform: scale(0.97);
 }
 
 button.primary,
@@ -1315,12 +1324,20 @@ textarea:focus {
     flex: 1;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 0.12rem;
+    min-height: 3rem;
     padding: 0.25rem 0;
     text-decoration: none;
     color: var(--muted);
     font-size: 0.66rem;
     text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .bottom-nav-item:active {
+    opacity: 0.6;
   }
 
   .bottom-nav-item .nav-icon {
