@@ -240,9 +240,14 @@ que dependen puntos posteriores.
 
 Funcionalidades más grandes y menos bloqueantes.
 
-- [ ] **Nivel general** del usuario, además del nivel por habilidad ya
-      existente: puntos de experiencia por completar **rutinas** y por cumplir
-      **objetivos semanales, mensuales y anuales**.
+- [x] **Nivel general** del usuario ✅ 2026-07-20: además del nivel por
+      habilidad, un nivel general = suma de XP de habilidades + `bonusXp`
+      (+50 al completar una rutina, y +100/+300/+1000 al cumplir los objetivos
+      **semanal/mensual/anual**). Objetivos de minutos por periodo editables en
+      Progreso (`goals`/`goalsClaimed` en la sesión); tarjeta de nivel general
+      y sección de objetivos con barra de progreso y estado «cumplido». XP se
+      otorga en `recordPractice` (una vez por periodo). Normalización de sesión
+      para los campos nuevos.
 - [ ] **Logros (achievements)** para el usuario de la sesión (desbloqueables
       por hitos: rachas, objetivos, niveles, etc.).
 - [ ] **Compartir sesiones por correo** (adjuntar/enviar el archivo de sesión;

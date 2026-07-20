@@ -21,7 +21,16 @@ import type {
   ResourceSummary,
   SaveResourceRequest,
 } from '../types/tab'
-import type { PracticeEntry, Routine } from '../types/routine'
+import {
+  GOAL_PERIODS,
+  GOAL_XP,
+  ROUTINE_COMPLETION_XP,
+  periodClaimKey,
+  type PracticeEntry,
+  type PracticeGoals,
+  type Routine,
+} from '../types/routine'
+import { minutesInCurrentPeriod } from '../utils/stats'
 import { translate as tr } from '../i18n/translate'
 import { saveText } from '../native/share'
 
@@ -331,6 +340,47 @@ export async function recordPractice(
     if (xp > 0) {
       session.experience[skill] = (session.experience[skill] ?? 0) + xp
     }
+  }
+  // nivel general: bonus al completar la rutina + al cumplir objetivos
+  if (entry.completed) {
+    session.bonusXp += ROUTINE_COMPLETION_XP
+  }
+  for (const period of GOAL_PERIODS) {
+    const target = session.goals[period]
+    if (target <= 0) continue
+    const key = periodClaimKey(period)
+    if (session.goalsClaimed.includes(key)) continue
+    if (minutesInCurrentPeriod(session.practiceLog, period) >= target) {
+      session.bonusXp += GOAL_XP[period]
+      session.goalsClaimed.push(key)
+    }
+  }
+  await persist()
+}
+
+/** XP total del nivel general: suma de habilidades + bonus. */
+export function getGeneralXp(): number {
+  const { session } = requireActive()
+  const skillsXp = Object.values(session.experience).reduce((a, b) => a + b, 0)
+  return skillsXp + session.bonusXp
+}
+
+export function getGoals(): PracticeGoals {
+  const { session } = requireActive()
+  return { ...session.goals }
+}
+
+export function getGoalsClaimed(): string[] {
+  const { session } = requireActive()
+  return session.goalsClaimed
+}
+
+export async function setGoals(goals: PracticeGoals): Promise<void> {
+  const { session } = requireActive()
+  session.goals = {
+    weekly: Math.max(0, Math.round(goals.weekly) || 0),
+    monthly: Math.max(0, Math.round(goals.monthly) || 0),
+    yearly: Math.max(0, Math.round(goals.yearly) || 0),
   }
   await persist()
 }

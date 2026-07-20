@@ -160,3 +160,55 @@ export function levelFromXp(xp: number): LevelInfo {
     xpForNext: level * 100,
   }
 }
+
+// ==========================================================================
+// Nivel general y objetivos. Además del nivel por habilidad, el usuario tiene
+// un **nivel general** que suma toda su experiencia más los bonus por
+// completar rutinas y por cumplir objetivos (semanal, mensual, anual).
+// ==========================================================================
+
+/** XP extra al completar una rutina, hacia el nivel general. */
+export const ROUTINE_COMPLETION_XP = 50
+
+export type GoalPeriod = 'weekly' | 'monthly' | 'yearly'
+
+export const GOAL_PERIODS: GoalPeriod[] = ['weekly', 'monthly', 'yearly']
+
+/** Objetivos de minutos practicados por periodo (0 = sin objetivo). */
+export interface PracticeGoals {
+  weekly: number
+  monthly: number
+  yearly: number
+}
+
+export const EMPTY_GOALS: PracticeGoals = { weekly: 0, monthly: 0, yearly: 0 }
+
+/** XP hacia el nivel general al cumplir cada objetivo. */
+export const GOAL_XP: Record<GoalPeriod, number> = {
+  weekly: 100,
+  monthly: 300,
+  yearly: 1000,
+}
+
+/** Lunes de la semana de `now` (clave de semana), formato YYYY-MM-DD. */
+export function weekStart(now = new Date()): string {
+  const d = new Date(now)
+  const day = (d.getDay() + 6) % 7 // 0 = lunes
+  d.setDate(d.getDate() - day)
+  return todayKey(d)
+}
+
+export function monthKey(now = new Date()): string {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function yearKey(now = new Date()): string {
+  return String(now.getFullYear())
+}
+
+/** Clave única del periodo actual (para no premiar dos veces el mismo). */
+export function periodClaimKey(period: GoalPeriod, now = new Date()): string {
+  if (period === 'yearly') return `y-${yearKey(now)}`
+  if (period === 'monthly') return `m-${monthKey(now)}`
+  return `w-${weekStart(now)}`
+}
