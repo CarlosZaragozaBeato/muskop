@@ -222,10 +222,13 @@ que dependen puntos posteriores.
       imagen (con zoom reutilizado), audio y vídeo. El zoom sobre imágenes
       queda cubierto por el mismo mecanismo. Import/export de sesión ya lo
       soporta (tipo string libre, contenido opaco).
-- [ ] Nueva sección **Resources** dentro de Settings: vista central de **todos
-      los recursos** para administrarlos en un solo sitio, con **importar /
-      exportar** (masivo e **individual**), **editar**, **eliminar** y
-      **visualizar** cada recurso, sin entrar en una sección por tipo.
+- [x] Nueva sección **Resources** dentro de Settings ✅ 2026-07-20: página
+      `/settings/resources` (`ResourcesPage.tsx`) enlazada desde Ajustes, con
+      la lista de **todos** los recursos y acciones de **visualizar**, **editar**
+      (donde hay editor: tablatura/teoría), **exportar individual**, **eliminar**,
+      e **importar / exportar en bloque**. Formato portable `muskopResources: 1`
+      (`utils/resourceIO.ts`); al importar se crean recursos nuevos (id nuevo)
+      para no colisionar.
 - [ ] **Exportación opcional de los archivos multimedia** al exportar la
       sesión: un **check deshabilitado por defecto**; si no se marca, la
       sesión se exporta sin los binarios pesados de los recursos.

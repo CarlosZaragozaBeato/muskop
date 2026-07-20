@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useI18n } from '../i18n/I18nContext'
 import LanguageSwitcher from '../i18n/LanguageSwitcher'
@@ -10,6 +11,7 @@ import ThemeToggle from '../theme/ThemeToggle'
  */
 export default function SettingsPage() {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const { user, downloadSession, logout } = useAuth()
 
   return (
@@ -27,6 +29,16 @@ export default function SettingsPage() {
         <div className="settings-row">
           <span>{t('settings.language')}</span>
           <LanguageSwitcher />
+        </div>
+      </section>
+
+      <section className="settings-section">
+        <h3>{t('settings.resourcesSection')}</h3>
+        <p className="muted">{t('settings.resourcesDesc')}</p>
+        <div className="settings-row">
+          <button type="button" onClick={() => navigate('/settings/resources')}>
+            {t('settings.manageResources')}
+          </button>
         </div>
       </section>
 
