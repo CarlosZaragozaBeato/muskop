@@ -162,12 +162,105 @@ Ampliación (2026-07-18):
 Al añadir texto de UI nuevo: crear la clave en **`en.ts` y `es.ts`** y usar
 `t('clave')` (nunca cadenas literales en los componentes).
 
-### Fase 4 — Móvil (futuro)
+### Fase 4 — Móvil (en curso)
 
-- [ ] Llevar la app a móvil. Al ser 100% frontend y basada en archivos, las
-      opciones naturales son PWA (instalable, offline) o empaquetado
-      (Capacitor). Decidir cuando llegue el momento; la arquitectura
-      local-first ya lo facilita.
+- [x] Empaquetado con **Capacitor** (`muskop_front/capacitor.config.ts`,
+      `appId: com.muskop.app`) y proyecto Android generado (`android/`).
+      Build del APK con JDK21 (`~/jdk21`) + SDK (`~/android-sdk`) y `gradlew`.
+- [ ] Pulir la experiencia móvil (ver Fase 5: navegación estilo mobile,
+      settings, zoom de imágenes, etc.).
+
+> **Regla de paridad:** todo lo que se implemente para Android debe
+> implementarse también en la web. La base es la misma app (100% frontend);
+> no se hacen funciones exclusivas de móvil salvo integraciones nativas
+> inevitables (p. ej. compartir con el SO), y aun así con equivalente web.
+
+### Fase 5 — Experiencia de usuario y gestión de recursos (planificada)
+
+> Recogida (2026-07-20). Objetivo: interfaz más limpia y "mobile-first",
+> recursos multimedia y gamificación general. Cada punto se implementa por
+> igual en web y en Android (regla de paridad de la Fase 4). Ordenada por
+> prioridad; dentro de cada nivel, de arriba abajo.
+
+#### Prioridad alta — pulido de UX y base de navegación
+
+Cambios pequeños y de alto impacto, y la reestructuración de navegación de la
+que dependen puntos posteriores.
+
+- [x] **No auto-iniciar** la rutina al entrar en el modo práctica ✅ 2026-07-20:
+      pantalla previa con resumen de bloques (nombre, habilidad, minutos y BPM
+      / tempo libre) y tiempo total; el temporizador solo arranca al pulsar
+      «Empezar» (`PracticePage.tsx`, estado `started`).
+- [x] **Botón de visualización** del recurso desde la Librería ✅ 2026-07-20:
+      botón «👁 Ver» en cada fila (tablaturas, acordes, fragmentos y teoría)
+      que abre un visor modal de solo lectura reutilizando `ResourceView`
+      (`ResourceViewDialog.tsx`), sin entrar al editor.
+- [x] **Zoom** en el visor de recursos ✅ 2026-07-20: controles −/%/+ en la
+      barra del visor que escalan el render SVG de tablaturas/fragmentos
+      (0,5×–3×, con scroll horizontal), en `ResourceView`. Reutilizable para
+      las imágenes cuando existan recursos de imagen (prioridad media).
+- [x] **Barra superior más limpia** + **menú de Settings** específico
+      ✅ 2026-07-20: nueva página `/settings` (`SettingsPage.tsx`) que agrupa
+      tema, idioma, descarga de sesión y cuenta (logout). La cabecera derecha
+      queda solo con el usuario y un icono ⚙️ hacia Ajustes. *(Base para la
+      sección de Recursos en Settings.)*
+- [x] **Barra de navegación estilo mobile** ✅ 2026-07-20: navegación principal
+      con iconos en una lista compartida (`NAV_ITEMS` en `App.tsx`). En móvil
+      (≤640px) se convierte en una **barra inferior fija** (icono + etiqueta,
+      con `safe-area-inset`) y se oculta la nav superior; en escritorio sigue
+      arriba. 5 secciones (Inicio, Rutinas, Progreso, Explorar, Librería);
+      «Nueva tablatura» se accede desde la Librería y Ajustes desde el ⚙️.
+
+#### Prioridad media — recursos multimedia y su gestión
+
+- [x] **Subir recursos de imagen, audio y vídeo** ✅ 2026-07-20: nuevo tipo de
+      recurso `MEDIA` (`content: {kind:'media', mediaType, mime, name, data,
+      size}`) con el binario en data URL base64 dentro de la sesión. Botón
+      «+ Multimedia» en la Librería con diálogo de subida
+      (`MediaUploadDialog.tsx`), validación de tipo y **límite de 8 MB/archivo**
+      (`utils/media.ts`, `MAX_MEDIA_BYTES`). El visor (`ResourceView`) renderiza
+      imagen (con zoom reutilizado), audio y vídeo. El zoom sobre imágenes
+      queda cubierto por el mismo mecanismo. Import/export de sesión ya lo
+      soporta (tipo string libre, contenido opaco).
+- [x] Nueva sección **Resources** dentro de Settings ✅ 2026-07-20: página
+      `/settings/resources` (`ResourcesPage.tsx`) enlazada desde Ajustes, con
+      la lista de **todos** los recursos y acciones de **visualizar**, **editar**
+      (donde hay editor: tablatura/teoría), **exportar individual**, **eliminar**,
+      e **importar / exportar en bloque**. Formato portable `muskopResources: 1`
+      (`utils/resourceIO.ts`); al importar se crean recursos nuevos (id nuevo)
+      para no colisionar.
+- [x] **Exportación opcional de los archivos multimedia** ✅ 2026-07-20:
+      `downloadActiveSession(includeMedia=false)` excluye por defecto los
+      binarios (vacía `data` de los recursos MEDIA conservando los metadatos);
+      en Ajustes hay un **check «incluir multimedia» desactivado por defecto**
+      que solo aparece si la sesión tiene multimedia. El visor avisa si un
+      recurso multimedia se exportó sin su archivo (`resourceView.mediaMissing`).
+
+#### Prioridad baja — gamificación y compartir
+
+Funcionalidades más grandes y menos bloqueantes.
+
+- [x] **Nivel general** del usuario ✅ 2026-07-20: además del nivel por
+      habilidad, un nivel general = suma de XP de habilidades + `bonusXp`
+      (+50 al completar una rutina, y +100/+300/+1000 al cumplir los objetivos
+      **semanal/mensual/anual**). Objetivos de minutos por periodo editables en
+      Progreso (`goals`/`goalsClaimed` en la sesión); tarjeta de nivel general
+      y sección de objetivos con barra de progreso y estado «cumplido». XP se
+      otorga en `recordPractice` (una vez por periodo). Normalización de sesión
+      para los campos nuevos.
+- [x] **Logros (achievements)** ✅ 2026-07-20: catálogo de 15 logros
+      (`utils/achievements.ts`) derivados de la sesión (primera práctica,
+      rutinas completadas, rachas 3/7/30, minutos totales, nivel general 5/10,
+      nivel 5 en una habilidad, objetivo cumplido, 5 recursos, primer
+      multimedia). Página `/achievements` enlazada desde Progreso, con
+      insignias desbloqueadas/bloqueadas. Se **guardan** en la sesión
+      (`achievements`) al cumplirse, así que son permanentes.
+- [x] **Compartir sesiones por correo** ✅ 2026-07-20: botón «Compartir por
+      correo» en Ajustes (`shareActiveSession`, respeta el check de multimedia).
+      En Android usa la hoja de compartir nativa (Capacitor `Share`, archivo
+      adjunto); en web usa la Web Share API con archivos si está disponible y,
+      si no, descarga el archivo + abre el cliente de correo (`mailto:`) con
+      asunto/cuerpo para adjuntarlo a mano (`native/share.ts` `shareFile`).
 
 ## Decisiones tomadas (2026-07-19)
 

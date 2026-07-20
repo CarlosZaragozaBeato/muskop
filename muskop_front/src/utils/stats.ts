@@ -1,4 +1,11 @@
-import { todayKey, type PracticeEntry } from '../types/routine'
+import {
+  monthKey,
+  todayKey,
+  weekStart,
+  yearKey,
+  type GoalPeriod,
+  type PracticeEntry,
+} from '../types/routine'
 
 // ==========================================================================
 // Estadísticas de constancia calculadas sobre el registro de práctica.
@@ -57,4 +64,15 @@ export function totalMinutes(log: PracticeEntry[]): number {
 
 export function timesCompleted(log: PracticeEntry[], routineId: string): number {
   return log.filter((e) => e.routineId === routineId && e.completed).length
+}
+
+/** Minutos practicados en el periodo actual (semana/mes/año en curso). */
+export function minutesInCurrentPeriod(log: PracticeEntry[], period: GoalPeriod): number {
+  const now = new Date()
+  const inPeriod = (dateKey: string): boolean => {
+    if (period === 'yearly') return dateKey.slice(0, 4) === yearKey(now)
+    if (period === 'monthly') return dateKey.slice(0, 7) === monthKey(now)
+    return weekStart(new Date(dateKey + 'T12:00:00')) === weekStart(now)
+  }
+  return log.filter((e) => inPeriod(e.date)).reduce((total, e) => total + e.minutes, 0)
 }

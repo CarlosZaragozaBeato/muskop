@@ -32,6 +32,7 @@ export default function PracticePage() {
   const [error, setError] = useState<string | null>(null)
   const [blockIndex, setBlockIndex] = useState(0)
   const [secondsLeft, setSecondsLeft] = useState(0)
+  const [started, setStarted] = useState(false)
   const [running, setRunning] = useState(true)
   const [finished, setFinished] = useState(false)
   const [metronomeOn, setMetronomeOn] = useState(false)
@@ -129,7 +130,7 @@ export default function PracticePage() {
 
   // temporizador (cuenta atrás del bloque + acumulado de práctica real)
   useEffect(() => {
-    if (!running || finished || !block) return
+    if (!started || !running || finished || !block) return
     const timer = setInterval(() => {
       blockSeconds.current += 1
       setSecondsLeft((prev) => {
@@ -142,7 +143,7 @@ export default function PracticePage() {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [running, finished, block, blockIndex, goTo])
+  }, [started, running, finished, block, blockIndex, goTo])
 
   const toggleMetronome = () => {
     if (!block?.bpm) return
@@ -161,6 +162,42 @@ export default function PracticePage() {
   }
   if (!routine) {
     return <p className="muted">{t('common.loading')}</p>
+  }
+
+  if (!started && !finished) {
+    const totalMinutes = routine.blocks.reduce((a, b) => a + b.minutes, 0)
+    return (
+      <div className="practice-page practice-preview">
+        <div className="page-header">
+          <h2>{routine.name}</h2>
+          <button type="button" onClick={() => navigate('/routines')}>
+            {t('practice.backRoutines')}
+          </button>
+        </div>
+        <p className="muted">
+          {t('practice.previewTotal', { min: totalMinutes, n: routine.blocks.length })}
+        </p>
+        <ol className="practice-preview-list">
+          {routine.blocks.map((b, i) => (
+            <li key={b.id} className="practice-preview-item">
+              <span className="block-number">{i + 1}</span>
+              <span className="practice-preview-name">{b.name || t('practice.blockDefault')}</span>
+              {b.skill && <span className="practice-preview-skill">{t(`skills.${b.skill}`)}</span>}
+              <span className="muted">
+                {b.minutes}′ ·{' '}
+                {b.bpm ? t('practice.bpmSuffix', { bpm: b.bpm }) : t('practice.previewFreeTempo')}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="muted">{t('practice.previewIntro')}</p>
+        <div className="header-actions">
+          <button type="button" className="primary" onClick={() => setStarted(true)}>
+            {t('practice.start')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (finished) {

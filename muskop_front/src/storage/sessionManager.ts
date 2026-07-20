@@ -10,19 +10,30 @@ import {
   createSession,
   parseSession,
   sessionFilename,
+  sessionLabel,
   uuid,
   type MuskopSession,
   type SessionResource,
 } from './session'
 import type {
   ExerciseMeta,
+  MediaContent,
   ResourceDetail,
   ResourceSummary,
   SaveResourceRequest,
 } from '../types/tab'
-import type { PracticeEntry, Routine } from '../types/routine'
+import {
+  GOAL_PERIODS,
+  GOAL_XP,
+  ROUTINE_COMPLETION_XP,
+  periodClaimKey,
+  type PracticeEntry,
+  type PracticeGoals,
+  type Routine,
+} from '../types/routine'
+import { minutesInCurrentPeriod } from '../utils/stats'
 import { translate as tr } from '../i18n/translate'
-import { saveText } from '../native/share'
+import { saveText, shareText, type ShareResult } from '../native/share'
 
 // ==========================================================================
 // Gestor de la sesión activa. Es la "base de datos" en memoria: cada
@@ -123,10 +134,55 @@ export function removeDeviceSession(deviceId: string): Promise<unknown> {
   return deleteStoredSession(deviceId)
 }
 
-/** Descarga (web) o comparte (Android) la sesión activa como .muskop.json */
-export function downloadActiveSession(): Promise<void> {
+/** ¿Tiene la sesión activa algún recurso multimedia con binario? */
+export function activeSessionHasMedia(): boolean {
+  const session = getActiveSession()
+  return !!session?.resources.some(
+    (r) => r.type.toUpperCase() === 'MEDIA' && !!(r.content as MediaContent)?.data,
+  )
+}
+
+/**
+ * Devuelve una copia de la sesión sin los binarios de los recursos multimedia:
+ * conserva los metadatos (título, tipo, mediaType, mime, nombre, tamaño) pero
+ * vacía `data`, para que la exportación no arrastre archivos pesados.
+ */
+function stripMediaBinaries(session: MuskopSession): MuskopSession {
+  return {
+    ...session,
+    resources: session.resources.map((r) => {
+      if (r.type.toUpperCase() === 'MEDIA' && r.content && typeof r.content === 'object') {
+        return { ...r, content: { ...(r.content as MediaContent), data: '' } }
+      }
+      return r
+    }),
+  }
+}
+
+/**
+ * Descarga (web) o comparte (Android) la sesión activa como .muskop.json.
+ * Por defecto **excluye** los binarios multimedia (pueden ser grandes); pasa
+ * `includeMedia: true` para incluirlos.
+ */
+export function downloadActiveSession(includeMedia = false): Promise<void> {
   const { session } = requireActive()
-  return saveText(sessionFilename(session), JSON.stringify(session, null, 2))
+  const data = includeMedia ? session : stripMediaBinaries(session)
+  return saveText(sessionFilename(session), JSON.stringify(data, null, 2))
+}
+
+/**
+ * Comparte la sesión activa (por correo u otra app). Como la descarga,
+ * excluye por defecto los binarios multimedia. En Android abre la hoja de
+ * compartir; en web usa la Web Share API o, si no hay, descarga + `mailto:`.
+ */
+export function shareActiveSession(includeMedia = false): Promise<ShareResult> {
+  const { session } = requireActive()
+  const data = includeMedia ? session : stripMediaBinaries(session)
+  const name = sessionLabel(session)
+  return shareText(sessionFilename(session), JSON.stringify(data, null, 2), {
+    title: tr('share.subject', { name }),
+    text: tr('share.body', { name }),
+  })
 }
 
 // ---- CRUD de recursos sobre la sesión activa --------------------------------
@@ -300,6 +356,70 @@ export async function recordPractice(
     if (xp > 0) {
       session.experience[skill] = (session.experience[skill] ?? 0) + xp
     }
+  }
+  // nivel general: bonus al completar la rutina + al cumplir objetivos
+  if (entry.completed) {
+    session.bonusXp += ROUTINE_COMPLETION_XP
+  }
+  for (const period of GOAL_PERIODS) {
+    const target = session.goals[period]
+    if (target <= 0) continue
+    const key = periodClaimKey(period)
+    if (session.goalsClaimed.includes(key)) continue
+    if (minutesInCurrentPeriod(session.practiceLog, period) >= target) {
+      session.bonusXp += GOAL_XP[period]
+      session.goalsClaimed.push(key)
+    }
+  }
+  await persist()
+}
+
+/** XP total del nivel general: suma de habilidades + bonus. */
+export function getGeneralXp(): number {
+  const { session } = requireActive()
+  const skillsXp = Object.values(session.experience).reduce((a, b) => a + b, 0)
+  return skillsXp + session.bonusXp
+}
+
+export function getGoals(): PracticeGoals {
+  const { session } = requireActive()
+  return { ...session.goals }
+}
+
+export function getGoalsClaimed(): string[] {
+  const { session } = requireActive()
+  return session.goalsClaimed
+}
+
+export function getAchievements(): string[] {
+  const { session } = requireActive()
+  return session.achievements
+}
+
+/**
+ * Marca como desbloqueados los logros cuya condición se cumple ahora
+ * (`metIds`), fusionándolos con los ya conseguidos. Devuelve la lista
+ * completa de desbloqueados. Solo persiste si hay alguno nuevo.
+ */
+export async function unlockAchievements(metIds: string[]): Promise<string[]> {
+  const { session } = requireActive()
+  let changed = false
+  for (const id of metIds) {
+    if (!session.achievements.includes(id)) {
+      session.achievements.push(id)
+      changed = true
+    }
+  }
+  if (changed) await persist()
+  return [...session.achievements]
+}
+
+export async function setGoals(goals: PracticeGoals): Promise<void> {
+  const { session } = requireActive()
+  session.goals = {
+    weekly: Math.max(0, Math.round(goals.weekly) || 0),
+    monthly: Math.max(0, Math.round(goals.monthly) || 0),
+    yearly: Math.max(0, Math.round(goals.yearly) || 0),
   }
   await persist()
 }

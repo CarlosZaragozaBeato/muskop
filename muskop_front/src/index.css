@@ -165,6 +165,19 @@ button.primary,
   flex-wrap: wrap;
 }
 
+.header-settings {
+  font-size: 1.15rem;
+  line-height: 1;
+  text-decoration: none;
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+}
+
+.header-settings.active,
+.header-settings:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
 .header-left {
   display: flex;
   align-items: center;
@@ -191,10 +204,49 @@ button.primary,
   color: var(--text);
 }
 
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.top-nav .nav-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+/* barra inferior tipo mobile: oculta en escritorio */
+.bottom-nav {
+  display: none;
+}
+
 .header-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* ===== Página de ajustes ===== */
+
+.settings-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  max-width: 40rem;
+}
+
+.settings-section h3 {
+  margin: 0 0 0.75rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
 }
 
 .page-header {
@@ -333,6 +385,7 @@ textarea:focus {
 .badge-chord { background: color-mix(in srgb, var(--success) 25%, transparent); }
 .badge-snippet { background: color-mix(in srgb, #fbbf24 28%, transparent); }
 .badge-collection { background: color-mix(in srgb, #f87171 28%, transparent); }
+.badge-media { background: color-mix(in srgb, #38bdf8 30%, transparent); }
 
 .chip {
   font-size: 0.72rem;
@@ -373,6 +426,14 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.modal-view {
+  width: 52rem;
+}
+
+.resource-view-dialog-body {
+  overflow-x: auto;
 }
 
 .modal-header {
@@ -665,6 +726,42 @@ textarea:focus {
   text-decoration: line-through;
 }
 
+/* Pantalla previa: resumen de bloques antes de empezar */
+.practice-preview-list {
+  list-style: none;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.practice-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.practice-preview-name {
+  flex: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.practice-preview-skill {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  white-space: nowrap;
+}
+
 .practice-main {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -743,6 +840,24 @@ textarea:focus {
   align-items: flex-start;
 }
 
+.resource-view-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.resource-view-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.resource-view-zoom button {
+  min-width: 2.2rem;
+  padding: 0.3rem 0.5rem;
+}
+
 .resource-view-svg {
   width: 100%;
   overflow-x: auto;
@@ -752,6 +867,27 @@ textarea:focus {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+.resource-view-media-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.resource-view-media {
+  width: 100%;
+}
+
+.resource-view-media audio {
+  width: 100%;
+}
+
+.resource-view-media-video {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
 }
 
 .resource-view-chord {
@@ -816,6 +952,118 @@ textarea:focus {
 
 .stats-panel .button {
   margin-left: auto;
+}
+
+/* ===== Logros ===== */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.achievement-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.achievement-card.unlocked {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.achievement-card.locked {
+  opacity: 0.6;
+}
+
+.achievement-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.achievement-body strong {
+  display: block;
+}
+
+.achievement-body .muted {
+  font-size: 0.78rem;
+}
+
+/* tarjeta del nivel general (destacada sobre las de habilidad) */
+.general-level-card {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.general-level-card p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+/* objetivos semanal/mensual/anual */
+.goals-section {
+  margin: 1.25rem 0;
+}
+
+.goals-section h3 {
+  margin: 0 0 0.35rem;
+}
+
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.goal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.goal-card.done {
+  border-color: color-mix(in srgb, var(--success) 55%, var(--border));
+  background: color-mix(in srgb, var(--success) 12%, var(--surface));
+}
+
+.goal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.goal-head .muted {
+  font-size: 0.72rem;
+}
+
+.goal-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.goal-target input {
+  width: 6rem;
 }
 
 .skills-grid {
@@ -1039,31 +1287,63 @@ textarea:focus {
 
 @media (max-width: 640px) {
   .app-layout {
-    padding: 0 0.9rem calc(2rem + env(safe-area-inset-bottom, 0px));
+    padding: 0 0.9rem calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* navegación principal: se oculta arriba y pasa a la barra inferior
+     (selector específico para ganar a `.header-left nav`) */
+  .header-left .top-nav {
+    display: none;
+  }
+
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    justify-content: space-around;
+    gap: 0.2rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 0.3rem 0.3rem calc(0.3rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.12rem;
+    padding: 0.25rem 0;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.66rem;
+    text-align: center;
+  }
+
+  .bottom-nav-item .nav-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--accent);
   }
 
   .app-header {
     margin-bottom: 1.25rem;
   }
 
-  /* el logotipo comparte fila con los controles; la navegación baja a su
-     propia línea a lo ancho */
+  /* la navegación principal pasa a la barra inferior; la cabecera queda
+     solo con el logotipo y los controles */
   .brand-logo {
     height: 28px;
   }
 
   .header-left {
     gap: 0.6rem;
-  }
-
-  .header-left nav {
-    flex-basis: 100%;
-    gap: 0.35rem 0.8rem;
-  }
-
-  .header-left nav a {
-    font-size: 0.95rem;
-    padding: 0.15rem 0;
   }
 
   .header-right {

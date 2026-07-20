@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { TabPlayer } from '../audio/player'
 import type {
   ChordContent,
+  MediaContent,
   ResourceDetail,
   SnippetContent,
   TabDocument,
@@ -24,9 +25,14 @@ import {
  * tablaturas y fragmentos se renderizan con el SVG, los acordes con su
  * diagrama. Las tablaturas se pueden escuchar.
  */
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 3
+const ZOOM_STEP = 0.25
+
 export default function ResourceView({ detail }: { detail: ResourceDetail }) {
   const { t } = useI18n()
   const [playing, setPlaying] = useState(false)
+  const [zoom, setZoom] = useState(1)
   const player = useRef<TabPlayer | null>(null)
 
   useEffect(() => {
@@ -59,11 +65,15 @@ export default function ResourceView({ detail }: { detail: ResourceDetail }) {
     }
   }, [detail])
 
-  // parar la reproducción al cambiar de recurso
+  // parar la reproducción y restablecer el zoom al cambiar de recurso
   useEffect(() => {
     player.current?.stop()
     setPlaying(false)
+    setZoom(1)
   }, [detail.id])
+
+  const changeZoom = (delta: number) =>
+    setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round((z + delta) * 100) / 100)))
 
   const togglePlay = () => {
     if (!doc) return
@@ -90,17 +100,91 @@ export default function ResourceView({ detail }: { detail: ResourceDetail }) {
     )
   }
 
+  // controles de zoom reutilizables (tablatura SVG e imágenes)
+  const zoomControls = (
+    <span className="resource-view-zoom">
+      <button
+        type="button"
+        onClick={() => changeZoom(-ZOOM_STEP)}
+        disabled={zoom <= ZOOM_MIN}
+        title={t('resourceView.zoomOut')}
+        aria-label={t('resourceView.zoomOut')}
+      >
+        −
+      </button>
+      <button
+        type="button"
+        onClick={() => setZoom(1)}
+        disabled={zoom === 1}
+        title={t('resourceView.zoomReset')}
+      >
+        {Math.round(zoom * 100)}%
+      </button>
+      <button
+        type="button"
+        onClick={() => changeZoom(ZOOM_STEP)}
+        disabled={zoom >= ZOOM_MAX}
+        title={t('resourceView.zoomIn')}
+        aria-label={t('resourceView.zoomIn')}
+      >
+        +
+      </button>
+    </span>
+  )
+
+  if (detail.type.toUpperCase() === 'MEDIA') {
+    const media = detail.content as MediaContent
+    if (!media.data) {
+      return <p className="muted">{t('resourceView.mediaMissing')}</p>
+    }
+    if (media.mediaType === 'image') {
+      return (
+        <div className="resource-view">
+          <div className="resource-view-toolbar">{zoomControls}</div>
+          <div className="resource-view-svg">
+            <div className="resource-view-svg-zoom" style={{ width: `${zoom * 100}%` }}>
+              <img className="resource-view-media-img" src={media.data} alt={detail.title} />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (media.mediaType === 'audio') {
+      return (
+        <div className="resource-view resource-view-media">
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <audio controls src={media.data}>
+            {t('resourceView.mediaUnsupported')}
+          </audio>
+        </div>
+      )
+    }
+    return (
+      <div className="resource-view resource-view-media">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video className="resource-view-media-video" controls src={media.data}>
+          {t('resourceView.mediaUnsupported')}
+        </video>
+      </div>
+    )
+  }
+
   if (!doc) {
     return <p className="muted">{t('resourceView.cannotPreview')}</p>
   }
 
   return (
     <div className="resource-view">
-      <button type="button" className={playing ? 'active' : ''} onClick={togglePlay}>
-        {playing ? t('resourceView.stop') : t('resourceView.listen')}
-      </button>
+      <div className="resource-view-toolbar">
+        <button type="button" className={playing ? 'active' : ''} onClick={togglePlay}>
+          {playing ? t('resourceView.stop') : t('resourceView.listen')}
+        </button>
+        {zoomControls}
+      </div>
       <div className="resource-view-svg">
-        <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" labels={buildTabLabels(t)} />
+        <div className="resource-view-svg-zoom" style={{ width: `${zoom * 100}%` }}>
+          <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" labels={buildTabLabels(t)} />
+        </div>
       </div>
     </div>
   )

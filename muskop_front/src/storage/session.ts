@@ -12,10 +12,12 @@
 // ==========================================================================
 
 import {
+  EMPTY_GOALS,
   newBlockId,
   uuid,
   type PracticeBlock,
   type PracticeEntry,
+  type PracticeGoals,
   type Routine,
 } from '../types/routine'
 import type { CollectionContent, ExerciseMeta } from '../types/tab'
@@ -51,6 +53,14 @@ export interface MuskopSession {
   practiceLog: PracticeEntry[]
   /** Experiencia acumulada por habilidad (XP) */
   experience: Record<string, number>
+  /** XP del nivel general por bonus (completar rutinas, cumplir objetivos) */
+  bonusXp: number
+  /** Objetivos de minutos por periodo (semana/mes/año) */
+  goals: PracticeGoals
+  /** Claves de periodo ya premiadas, para no dar el bonus dos veces */
+  goalsClaimed: string[]
+  /** Ids de logros desbloqueados (permanentes una vez conseguidos) */
+  achievements: string[]
   settings: Record<string, unknown>
 }
 
@@ -63,6 +73,10 @@ export function createSession(username: string, label?: string): MuskopSession {
     routines: [],
     practiceLog: [],
     experience: {},
+    bonusXp: 0,
+    goals: { ...EMPTY_GOALS },
+    goalsClaimed: [],
+    achievements: [],
     settings: {},
   }
 }
@@ -117,6 +131,12 @@ function normalizeExperience(raw: unknown): Record<string, number> {
     }
   }
   return result
+}
+
+function normalizeGoals(raw: unknown): PracticeGoals {
+  const g = (raw ?? {}) as Partial<Record<keyof PracticeGoals, unknown>>
+  const one = (v: unknown) => (typeof v === 'number' && v > 0 ? Math.round(v) : 0)
+  return { weekly: one(g.weekly), monthly: one(g.monthly), yearly: one(g.yearly) }
 }
 
 function normalizeRoutine(raw: unknown): Routine | null {
@@ -198,6 +218,14 @@ export function parseSession(raw: unknown): MuskopSession {
     routines,
     practiceLog: normalizePracticeLog(obj.practiceLog),
     experience: normalizeExperience(obj.experience),
+    bonusXp: typeof obj.bonusXp === 'number' && obj.bonusXp > 0 ? obj.bonusXp : 0,
+    goals: normalizeGoals(obj.goals),
+    goalsClaimed: Array.isArray(obj.goalsClaimed)
+      ? obj.goalsClaimed.filter((k): k is string => typeof k === 'string')
+      : [],
+    achievements: Array.isArray(obj.achievements)
+      ? obj.achievements.filter((k): k is string => typeof k === 'string')
+      : [],
     settings: obj.settings && typeof obj.settings === 'object' ? obj.settings : {},
   }
 }

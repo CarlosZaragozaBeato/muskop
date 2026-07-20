@@ -9,18 +9,28 @@ import ExplorePage from './pages/ExplorePage'
 import TheoryPage from './pages/TheoryPage'
 import RoutineEditorPage from './pages/RoutineEditorPage'
 import RoutinesPage from './pages/RoutinesPage'
+import ResourcesPage from './pages/ResourcesPage'
+import AchievementsPage from './pages/AchievementsPage'
+import SettingsPage from './pages/SettingsPage'
 import TabEditorPage from './pages/TabEditorPage'
 import { NavLink } from 'react-router-dom'
 import { useI18n } from './i18n/I18nContext'
-import LanguageSwitcher from './i18n/LanguageSwitcher'
 import { useTheme } from './theme/ThemeContext'
-import ThemeToggle from './theme/ThemeToggle'
 import { useBackButton } from './native/useBackButton'
 import logoLight from './assets/brand/logotipo-light.svg'
 import logoDark from './assets/brand/logotipo-dark.svg'
 
+/** Secciones principales de navegación (barra superior y barra inferior). */
+const NAV_ITEMS = [
+  { to: '/', key: 'nav.home', icon: '🏠', end: true },
+  { to: '/routines', key: 'nav.routines', icon: '📋', end: false },
+  { to: '/progress', key: 'nav.progress', icon: '📈', end: false },
+  { to: '/explore', key: 'nav.explore', icon: '🧭', end: false },
+  { to: '/library', key: 'nav.library', icon: '📚', end: false },
+] as const
+
 function ProtectedLayout() {
-  const { user, ready, logout, downloadSession } = useAuth()
+  const { user, ready } = useAuth()
   const { t } = useI18n()
   const { theme } = useTheme()
 
@@ -40,28 +50,38 @@ function ProtectedLayout() {
             src={theme === 'dark' ? logoDark : logoLight}
             alt="Muskop"
           />
-          <nav>
-            <NavLink to="/">{t('nav.home')}</NavLink>
-            <NavLink to="/routines">{t('nav.routines')}</NavLink>
-            <NavLink to="/progress">{t('nav.progress')}</NavLink>
-            <NavLink to="/explore">{t('nav.explore')}</NavLink>
-            <NavLink to="/library">{t('nav.library')}</NavLink>
-            <NavLink to="/tabs/new">{t('nav.newTab')}</NavLink>
+          <nav className="top-nav">
+            {NAV_ITEMS.map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.end}>
+                <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+                <span className="nav-label">{t(item.key)}</span>
+              </NavLink>
+            ))}
           </nav>
         </div>
         <div className="header-right">
-          <ThemeToggle />
-          <LanguageSwitcher />
-          <span className="muted">{user.username}</span>
-          <button type="button" title={t('header.sessionTitle')} onClick={downloadSession}>
-            ⬇ {t('header.session')}
-          </button>
-          <button type="button" onClick={logout}>{t('header.logout')}</button>
+          <span className="muted header-user">{user.username}</span>
+          <NavLink
+            className="header-settings"
+            to="/settings"
+            title={t('nav.settings')}
+            aria-label={t('nav.settings')}
+          >
+            ⚙️
+          </NavLink>
         </div>
       </header>
       <main>
         <Outlet />
       </main>
+      <nav className="bottom-nav">
+        {NAV_ITEMS.map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} className="bottom-nav-item">
+            <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+            <span className="nav-label">{t(item.key)}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   )
 }
@@ -78,10 +98,13 @@ export default function App() {
         <Route path="/routines/:id" element={<RoutineEditorPage />} />
         <Route path="/routines/:id/practice" element={<PracticePage />} />
         <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/theory/new" element={<TheoryPage />} />
         <Route path="/theory/:id" element={<TheoryPage />} />
         <Route path="/library" element={<LibraryPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/settings/resources" element={<ResourcesPage />} />
         <Route path="/tabs/new" element={<TabEditorPage />} />
         <Route path="/tabs/:id" element={<TabEditorPage />} />
       </Route>

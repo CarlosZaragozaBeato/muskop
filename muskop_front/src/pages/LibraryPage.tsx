@@ -10,10 +10,17 @@ import {
 } from '../components/tab/tabModel'
 import { exportPdf, exportPng, exportText } from '../utils/exporters'
 import ExerciseDialog from '../components/ExerciseDialog'
+import MediaUploadDialog from '../components/MediaUploadDialog'
+import ResourceViewDialog from '../components/ResourceViewDialog'
 import { useI18n } from '../i18n/I18nContext'
-import type { CollectionContent, ExerciseMeta, ResourceSummary } from '../types/tab'
+import type {
+  CollectionContent,
+  ExerciseMeta,
+  MediaContent,
+  ResourceSummary,
+} from '../types/tab'
 
-const TYPE_ORDER = ['TAB', 'CHORD', 'SNIPPET', 'THEORY', 'COLLECTION']
+const TYPE_ORDER = ['TAB', 'CHORD', 'SNIPPET', 'THEORY', 'MEDIA', 'COLLECTION']
 
 export default function LibraryPage() {
   const { user } = useAuth()
@@ -25,7 +32,9 @@ export default function LibraryPage() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [creatingCollection, setCreatingCollection] = useState(false)
+  const [uploadingMedia, setUploadingMedia] = useState(false)
   const [exerciseTarget, setExerciseTarget] = useState<ResourceSummary | null>(null)
+  const [viewTarget, setViewTarget] = useState<ResourceSummary | null>(null)
 
   const reload = useCallback(() => {
     if (!user) return
@@ -93,6 +102,9 @@ export default function LibraryPage() {
         <h2>{t('library.title')}</h2>
         <div className="header-actions">
           <Link className="button" to="/theory/new">{t('library.addTheory')}</Link>
+          <button type="button" onClick={() => setUploadingMedia(true)}>
+            {t('library.addMedia')}
+          </button>
           <button type="button" onClick={() => setCreatingCollection(true)}>
             {t('library.addCollection')}
           </button>
@@ -138,6 +150,11 @@ export default function LibraryPage() {
                 </span>
               )}
               <span className="row-actions">
+                {type !== 'COLLECTION' && (
+                  <button type="button" onClick={() => setViewTarget(item)}>
+                    👁 {t('common.view')}
+                  </button>
+                )}
                 {type === 'TAB' && (
                   <>
                     <button type="button" onClick={() => navigate(`/tabs/${item.id}`)}>
@@ -195,6 +212,31 @@ export default function LibraryPage() {
           )
         })}
       </ul>
+
+      {viewTarget && (
+        <ResourceViewDialog
+          id={viewTarget.id}
+          title={viewTarget.title}
+          onClose={() => setViewTarget(null)}
+        />
+      )}
+
+      {uploadingMedia && (
+        <MediaUploadDialog
+          onClose={() => setUploadingMedia(false)}
+          onCreate={async (title, category, content: MediaContent) => {
+            if (!user) return
+            await api.createResource(user.id, {
+              title,
+              type: 'MEDIA',
+              category,
+              content,
+            })
+            setUploadingMedia(false)
+            reload()
+          }}
+        />
+      )}
 
       {exerciseTarget && (
         <ExerciseDialog

@@ -15,7 +15,7 @@ interface AuthContextValue {
   createSession: (username: string, label?: string) => Promise<void>
   openSession: (deviceId: string) => Promise<void>
   importSession: (file: File) => Promise<void>
-  downloadSession: () => void
+  downloadSession: (includeMedia?: boolean) => void
   logout: () => void
 }
 
@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(toUser(await sessions.importSessionFile(file)))
   }, [])
 
-  const downloadSession = useCallback(() => {
-    sessions.downloadActiveSession()
+  const downloadSession = useCallback((includeMedia = false) => {
+    sessions.downloadActiveSession(includeMedia)
   }, [])
 
   const logout = useCallback(() => {

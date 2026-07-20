@@ -129,6 +129,27 @@ export interface TheoryContent {
   body: string
 }
 
+/** Tipo de archivo multimedia soportado (tipo de recurso MEDIA) */
+export type MediaKind = 'image' | 'audio' | 'video'
+
+/**
+ * Recurso multimedia (tipo de recurso MEDIA): una imagen, audio o vídeo que
+ * el usuario sube. El binario se guarda como data URL base64 dentro de la
+ * sesión, con un límite de tamaño (ver `MAX_MEDIA_BYTES` en utils/media.ts).
+ */
+export interface MediaContent {
+  kind: 'media'
+  mediaType: MediaKind
+  /** MIME original del archivo (p. ej. image/png, audio/mpeg, video/mp4) */
+  mime: string
+  /** Nombre del archivo original */
+  name: string
+  /** Contenido como data URL base64 (`data:<mime>;base64,...`) */
+  data: string
+  /** Tamaño en bytes del archivo original (para mostrarlo) */
+  size: number
+}
+
 // ---- Ejercicios ----------------------------------------------------------
 
 /**
