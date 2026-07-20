@@ -213,10 +213,15 @@ que dependen puntos posteriores.
 
 #### Prioridad media — recursos multimedia y su gestión
 
-- [ ] **Subir recursos de imagen, audio y vídeo** (con límite de tamaño
-      razonable — no admitir archivos muy grandes). Nuevo(s) tipo(s) de
-      recurso multimedia dentro de la sesión. *(Habilita el zoom/visor sobre
-      contenido propio y la exportación opcional.)*
+- [x] **Subir recursos de imagen, audio y vídeo** ✅ 2026-07-20: nuevo tipo de
+      recurso `MEDIA` (`content: {kind:'media', mediaType, mime, name, data,
+      size}`) con el binario en data URL base64 dentro de la sesión. Botón
+      «+ Multimedia» en la Librería con diálogo de subida
+      (`MediaUploadDialog.tsx`), validación de tipo y **límite de 8 MB/archivo**
+      (`utils/media.ts`, `MAX_MEDIA_BYTES`). El visor (`ResourceView`) renderiza
+      imagen (con zoom reutilizado), audio y vídeo. El zoom sobre imágenes
+      queda cubierto por el mismo mecanismo. Import/export de sesión ya lo
+      soporta (tipo string libre, contenido opaco).
 - [ ] Nueva sección **Resources** dentro de Settings: vista central de **todos
       los recursos** para administrarlos en un solo sitio, con **importar /
       exportar** (masivo e **individual**), **editar**, **eliminar** y

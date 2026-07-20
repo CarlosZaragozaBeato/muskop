@@ -385,6 +385,7 @@ textarea:focus {
 .badge-chord { background: color-mix(in srgb, var(--success) 25%, transparent); }
 .badge-snippet { background: color-mix(in srgb, #fbbf24 28%, transparent); }
 .badge-collection { background: color-mix(in srgb, #f87171 28%, transparent); }
+.badge-media { background: color-mix(in srgb, #38bdf8 30%, transparent); }
 
 .chip {
   font-size: 0.72rem;
@@ -866,6 +867,27 @@ textarea:focus {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+.resource-view-media-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.resource-view-media {
+  width: 100%;
+}
+
+.resource-view-media audio {
+  width: 100%;
+}
+
+.resource-view-media-video {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
 }
 
 .resource-view-chord {

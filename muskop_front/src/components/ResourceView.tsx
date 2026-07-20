@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { TabPlayer } from '../audio/player'
 import type {
   ChordContent,
+  MediaContent,
   ResourceDetail,
   SnippetContent,
   TabDocument,
@@ -99,6 +100,72 @@ export default function ResourceView({ detail }: { detail: ResourceDetail }) {
     )
   }
 
+  // controles de zoom reutilizables (tablatura SVG e imágenes)
+  const zoomControls = (
+    <span className="resource-view-zoom">
+      <button
+        type="button"
+        onClick={() => changeZoom(-ZOOM_STEP)}
+        disabled={zoom <= ZOOM_MIN}
+        title={t('resourceView.zoomOut')}
+        aria-label={t('resourceView.zoomOut')}
+      >
+        −
+      </button>
+      <button
+        type="button"
+        onClick={() => setZoom(1)}
+        disabled={zoom === 1}
+        title={t('resourceView.zoomReset')}
+      >
+        {Math.round(zoom * 100)}%
+      </button>
+      <button
+        type="button"
+        onClick={() => changeZoom(ZOOM_STEP)}
+        disabled={zoom >= ZOOM_MAX}
+        title={t('resourceView.zoomIn')}
+        aria-label={t('resourceView.zoomIn')}
+      >
+        +
+      </button>
+    </span>
+  )
+
+  if (detail.type.toUpperCase() === 'MEDIA') {
+    const media = detail.content as MediaContent
+    if (media.mediaType === 'image') {
+      return (
+        <div className="resource-view">
+          <div className="resource-view-toolbar">{zoomControls}</div>
+          <div className="resource-view-svg">
+            <div className="resource-view-svg-zoom" style={{ width: `${zoom * 100}%` }}>
+              <img className="resource-view-media-img" src={media.data} alt={detail.title} />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (media.mediaType === 'audio') {
+      return (
+        <div className="resource-view resource-view-media">
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <audio controls src={media.data}>
+            {t('resourceView.mediaUnsupported')}
+          </audio>
+        </div>
+      )
+    }
+    return (
+      <div className="resource-view resource-view-media">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video className="resource-view-media-video" controls src={media.data}>
+          {t('resourceView.mediaUnsupported')}
+        </video>
+      </div>
+    )
+  }
+
   if (!doc) {
     return <p className="muted">{t('resourceView.cannotPreview')}</p>
   }
@@ -109,34 +176,7 @@ export default function ResourceView({ detail }: { detail: ResourceDetail }) {
         <button type="button" className={playing ? 'active' : ''} onClick={togglePlay}>
           {playing ? t('resourceView.stop') : t('resourceView.listen')}
         </button>
-        <span className="resource-view-zoom">
-          <button
-            type="button"
-            onClick={() => changeZoom(-ZOOM_STEP)}
-            disabled={zoom <= ZOOM_MIN}
-            title={t('resourceView.zoomOut')}
-            aria-label={t('resourceView.zoomOut')}
-          >
-            −
-          </button>
-          <button
-            type="button"
-            onClick={() => setZoom(1)}
-            disabled={zoom === 1}
-            title={t('resourceView.zoomReset')}
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-          <button
-            type="button"
-            onClick={() => changeZoom(ZOOM_STEP)}
-            disabled={zoom >= ZOOM_MAX}
-            title={t('resourceView.zoomIn')}
-            aria-label={t('resourceView.zoomIn')}
-          >
-            +
-          </button>
-        </span>
+        {zoomControls}
       </div>
       <div className="resource-view-svg">
         <div className="resource-view-svg-zoom" style={{ width: `${zoom * 100}%` }}>
