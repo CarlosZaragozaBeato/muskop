@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useI18n } from '../i18n/I18nContext'
 import LanguageSwitcher from '../i18n/LanguageSwitcher'
-import { activeSessionHasMedia } from '../storage/sessionManager'
+import * as sessions from '../storage/sessionManager'
 import ThemeToggle from '../theme/ThemeToggle'
 
 /**
@@ -15,8 +15,15 @@ export default function SettingsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { user, downloadSession, logout } = useAuth()
-  const hasMedia = useMemo(() => activeSessionHasMedia(), [])
+  const hasMedia = useMemo(() => sessions.activeSessionHasMedia(), [])
   const [includeMedia, setIncludeMedia] = useState(false)
+  const [shareNote, setShareNote] = useState<string | null>(null)
+
+  const shareSession = async () => {
+    setShareNote(null)
+    const result = await sessions.shareActiveSession(includeMedia)
+    if (result === 'download') setShareNote(t('settings.shareDownloaded'))
+  }
 
   return (
     <div className="settings-page">
@@ -59,11 +66,15 @@ export default function SettingsPage() {
             {t('settings.includeMedia')}
           </label>
         )}
-        <div className="settings-row">
+        <div className="header-actions">
           <button type="button" onClick={() => downloadSession(includeMedia)}>
             {t('settings.downloadSession')}
           </button>
+          <button type="button" onClick={shareSession}>
+            {t('settings.shareSession')}
+          </button>
         </div>
+        {shareNote && <p className="success">{shareNote}</p>}
       </section>
 
       <section className="settings-section">

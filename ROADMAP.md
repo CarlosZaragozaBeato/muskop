@@ -255,8 +255,12 @@ Funcionalidades más grandes y menos bloqueantes.
       multimedia). Página `/achievements` enlazada desde Progreso, con
       insignias desbloqueadas/bloqueadas. Se **guardan** en la sesión
       (`achievements`) al cumplirse, así que son permanentes.
-- [ ] **Compartir sesiones por correo** (adjuntar/enviar el archivo de sesión;
-      en móvil vía el compartir nativo del SO, en web equivalente).
+- [x] **Compartir sesiones por correo** ✅ 2026-07-20: botón «Compartir por
+      correo» en Ajustes (`shareActiveSession`, respeta el check de multimedia).
+      En Android usa la hoja de compartir nativa (Capacitor `Share`, archivo
+      adjunto); en web usa la Web Share API con archivos si está disponible y,
+      si no, descarga el archivo + abre el cliente de correo (`mailto:`) con
+      asunto/cuerpo para adjuntarlo a mano (`native/share.ts` `shareFile`).
 
 ## Decisiones tomadas (2026-07-19)
 

@@ -117,12 +117,18 @@ export const es: Dict = {
     sessionDesc: 'Descarga tu sesión (.muskop.json): tu librería y rutinas en un archivo.',
     includeMedia: 'Incluir los archivos multimedia (imágenes, audio, vídeo) — archivo más grande',
     downloadSession: '⬇ Descargar sesión',
+    shareSession: '✉ Compartir por correo',
+    shareDownloaded: 'Se descargó el archivo de tu sesión — adjúntalo al correo que se acaba de abrir.',
     account: 'Cuenta',
     loggedInAs: 'Sesión de {name}',
     logout: 'Salir',
     resourcesSection: 'Recursos',
     resourcesDesc: 'Administra todos tus recursos en un solo sitio: verlos, editarlos, importar, exportar o eliminarlos.',
     manageResources: 'Administrar recursos',
+  },
+  share: {
+    subject: 'Sesión de Muskop — {name}',
+    body: 'Te adjunto mi sesión de Muskop «{name}» (.muskop.json). Ábrela en Muskop para importar mi librería y mis rutinas.',
   },
   resources: {
     title: 'Recursos',

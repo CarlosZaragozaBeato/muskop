@@ -117,12 +117,18 @@ export const en: Dict = {
     sessionDesc: 'Download your session (.muskop.json): your library and routines in one file.',
     includeMedia: 'Include media files (images, audio, video) — larger file',
     downloadSession: '⬇ Download session',
+    shareSession: '✉ Share by email',
+    shareDownloaded: 'Your session file was downloaded — attach it to the email that just opened.',
     account: 'Account',
     loggedInAs: 'Signed in as {name}',
     logout: 'Log out',
     resourcesSection: 'Resources',
     resourcesDesc: 'Manage all your resources in one place: view, edit, import, export or delete them.',
     manageResources: 'Manage resources',
+  },
+  share: {
+    subject: 'Muskop session — {name}',
+    body: 'Attached is my Muskop session “{name}” (.muskop.json). Open it in Muskop to import my library and routines.',
   },
   resources: {
     title: 'Resources',

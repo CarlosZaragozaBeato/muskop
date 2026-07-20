@@ -10,6 +10,7 @@ import {
   createSession,
   parseSession,
   sessionFilename,
+  sessionLabel,
   uuid,
   type MuskopSession,
   type SessionResource,
@@ -32,7 +33,7 @@ import {
 } from '../types/routine'
 import { minutesInCurrentPeriod } from '../utils/stats'
 import { translate as tr } from '../i18n/translate'
-import { saveText } from '../native/share'
+import { saveText, shareText, type ShareResult } from '../native/share'
 
 // ==========================================================================
 // Gestor de la sesión activa. Es la "base de datos" en memoria: cada
@@ -167,6 +168,21 @@ export function downloadActiveSession(includeMedia = false): Promise<void> {
   const { session } = requireActive()
   const data = includeMedia ? session : stripMediaBinaries(session)
   return saveText(sessionFilename(session), JSON.stringify(data, null, 2))
+}
+
+/**
+ * Comparte la sesión activa (por correo u otra app). Como la descarga,
+ * excluye por defecto los binarios multimedia. En Android abre la hoja de
+ * compartir; en web usa la Web Share API o, si no hay, descarga + `mailto:`.
+ */
+export function shareActiveSession(includeMedia = false): Promise<ShareResult> {
+  const { session } = requireActive()
+  const data = includeMedia ? session : stripMediaBinaries(session)
+  const name = sessionLabel(session)
+  return shareText(sessionFilename(session), JSON.stringify(data, null, 2), {
+    title: tr('share.subject', { name }),
+    text: tr('share.body', { name }),
+  })
 }
 
 // ---- CRUD de recursos sobre la sesión activa --------------------------------
