@@ -248,8 +248,13 @@ Funcionalidades más grandes y menos bloqueantes.
       y sección de objetivos con barra de progreso y estado «cumplido». XP se
       otorga en `recordPractice` (una vez por periodo). Normalización de sesión
       para los campos nuevos.
-- [ ] **Logros (achievements)** para el usuario de la sesión (desbloqueables
-      por hitos: rachas, objetivos, niveles, etc.).
+- [x] **Logros (achievements)** ✅ 2026-07-20: catálogo de 15 logros
+      (`utils/achievements.ts`) derivados de la sesión (primera práctica,
+      rutinas completadas, rachas 3/7/30, minutos totales, nivel general 5/10,
+      nivel 5 en una habilidad, objetivo cumplido, 5 recursos, primer
+      multimedia). Página `/achievements` enlazada desde Progreso, con
+      insignias desbloqueadas/bloqueadas. Se **guardan** en la sesión
+      (`achievements`) al cumplirse, así que son permanentes.
 - [ ] **Compartir sesiones por correo** (adjuntar/enviar el archivo de sesión;
       en móvil vía el compartir nativo del SO, en web equivalente).
 

@@ -80,6 +80,9 @@ export default function ProgressPage() {
     <div className="progress-page">
       <div className="page-header">
         <h2>{t('progress.title')}</h2>
+        <button type="button" onClick={() => navigate('/achievements')}>
+          {t('progress.achievementsLink')}
+        </button>
       </div>
 
       <div className="stats-panel">

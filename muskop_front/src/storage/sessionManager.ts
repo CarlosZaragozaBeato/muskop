@@ -375,6 +375,29 @@ export function getGoalsClaimed(): string[] {
   return session.goalsClaimed
 }
 
+export function getAchievements(): string[] {
+  const { session } = requireActive()
+  return session.achievements
+}
+
+/**
+ * Marca como desbloqueados los logros cuya condición se cumple ahora
+ * (`metIds`), fusionándolos con los ya conseguidos. Devuelve la lista
+ * completa de desbloqueados. Solo persiste si hay alguno nuevo.
+ */
+export async function unlockAchievements(metIds: string[]): Promise<string[]> {
+  const { session } = requireActive()
+  let changed = false
+  for (const id of metIds) {
+    if (!session.achievements.includes(id)) {
+      session.achievements.push(id)
+      changed = true
+    }
+  }
+  if (changed) await persist()
+  return [...session.achievements]
+}
+
 export async function setGoals(goals: PracticeGoals): Promise<void> {
   const { session } = requireActive()
   session.goals = {

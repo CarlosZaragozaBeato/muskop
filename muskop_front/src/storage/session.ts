@@ -59,6 +59,8 @@ export interface MuskopSession {
   goals: PracticeGoals
   /** Claves de periodo ya premiadas, para no dar el bonus dos veces */
   goalsClaimed: string[]
+  /** Ids de logros desbloqueados (permanentes una vez conseguidos) */
+  achievements: string[]
   settings: Record<string, unknown>
 }
 
@@ -74,6 +76,7 @@ export function createSession(username: string, label?: string): MuskopSession {
     bonusXp: 0,
     goals: { ...EMPTY_GOALS },
     goalsClaimed: [],
+    achievements: [],
     settings: {},
   }
 }
@@ -219,6 +222,9 @@ export function parseSession(raw: unknown): MuskopSession {
     goals: normalizeGoals(obj.goals),
     goalsClaimed: Array.isArray(obj.goalsClaimed)
       ? obj.goalsClaimed.filter((k): k is string => typeof k === 'string')
+      : [],
+    achievements: Array.isArray(obj.achievements)
+      ? obj.achievements.filter((k): k is string => typeof k === 'string')
       : [],
     settings: obj.settings && typeof obj.settings === 'object' ? obj.settings : {},
   }

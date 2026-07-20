@@ -954,6 +954,47 @@ textarea:focus {
   margin-left: auto;
 }
 
+/* ===== Logros ===== */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.achievement-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.achievement-card.unlocked {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.achievement-card.locked {
+  opacity: 0.6;
+}
+
+.achievement-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.achievement-body strong {
+  display: block;
+}
+
+.achievement-body .muted {
+  font-size: 0.78rem;
+}
+
 /* tarjeta del nivel general (destacada sobre las de habilidad) */
 .general-level-card {
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));

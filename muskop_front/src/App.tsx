@@ -10,6 +10,7 @@ import TheoryPage from './pages/TheoryPage'
 import RoutineEditorPage from './pages/RoutineEditorPage'
 import RoutinesPage from './pages/RoutinesPage'
 import ResourcesPage from './pages/ResourcesPage'
+import AchievementsPage from './pages/AchievementsPage'
 import SettingsPage from './pages/SettingsPage'
 import TabEditorPage from './pages/TabEditorPage'
 import { NavLink } from 'react-router-dom'
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="/routines/:id" element={<RoutineEditorPage />} />
         <Route path="/routines/:id/practice" element={<PracticePage />} />
         <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/theory/new" element={<TheoryPage />} />
         <Route path="/theory/:id" element={<TheoryPage />} />
