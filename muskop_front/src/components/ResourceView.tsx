@@ -1,0 +1,191 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { TabPlayer } from '../audio/player'
+import type {
+  ChordContent,
+  MediaContent,
+  ResourceDetail,
+  SnippetContent,
+  TabDocument,
+  TheoryContent,
+} from '../types/tab'
+import ChordDiagram from './tab/ChordDiagram'
+import TabSvg from './tab/TabSvg'
+import TheoryView from './TheoryView'
+import { useI18n } from '../i18n/I18nContext'
+import {
+  buildTabLabels,
+  fromDocument,
+  parseTabContent,
+  STANDARD_TUNING,
+  type EditorDocument,
+} from './tab/tabModel'
+
+/**
+ * Visor de solo lectura de un recurso de la librería (para el modo práctica):
+ * tablaturas y fragmentos se renderizan con el SVG, los acordes con su
+ * diagrama. Las tablaturas se pueden escuchar.
+ */
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 3
+const ZOOM_STEP = 0.25
+
+export default function ResourceView({ detail }: { detail: ResourceDetail }) {
+  const { t } = useI18n()
+  const [playing, setPlaying] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const player = useRef<TabPlayer | null>(null)
+
+  useEffect(() => {
+    player.current = new TabPlayer()
+    return () => player.current?.stop()
+  }, [])
+
+  const doc: EditorDocument | null = useMemo(() => {
+    try {
+      const type = detail.type.toUpperCase()
+      if (type === 'TAB') {
+        return fromDocument(parseTabContent(detail.content))
+      }
+      if (type === 'SNIPPET') {
+        const content = detail.content as SnippetContent
+        const asDoc: TabDocument = {
+          version: 2,
+          title: detail.title,
+          category: null,
+          tuning: content.tuning ?? [...STANDARD_TUNING],
+          timeSignature: '4/4',
+          baseBpm: 100,
+          sections: [{ kind: 'tab', name: detail.title, measures: content.measures ?? [] }],
+        }
+        return fromDocument(asDoc)
+      }
+      return null
+    } catch {
+      return null
+    }
+  }, [detail])
+
+  // parar la reproducción y restablecer el zoom al cambiar de recurso
+  useEffect(() => {
+    player.current?.stop()
+    setPlaying(false)
+    setZoom(1)
+  }, [detail.id])
+
+  const changeZoom = (delta: number) =>
+    setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round((z + delta) * 100) / 100)))
+
+  const togglePlay = () => {
+    if (!doc) return
+    if (playing) {
+      player.current?.stop()
+      setPlaying(false)
+      return
+    }
+    setPlaying(true)
+    player.current?.play(doc, { metronome: false, onEnd: () => setPlaying(false) })
+  }
+
+  if (detail.type.toUpperCase() === 'THEORY') {
+    return <TheoryView body={(detail.content as TheoryContent).body ?? ''} />
+  }
+
+  if (detail.type.toUpperCase() === 'CHORD') {
+    const chord = (detail.content as ChordContent).chord
+    return (
+      <div className="resource-view resource-view-chord">
+        <ChordDiagram chord={chord} width={170} />
+        <strong>{chord.name || detail.title}</strong>
+      </div>
+    )
+  }
+
+  // controles de zoom reutilizables (tablatura SVG e imágenes)
+  const zoomControls = (
+    <span className="resource-view-zoom">
+      <button
+        type="button"
+        onClick={() => changeZoom(-ZOOM_STEP)}
+        disabled={zoom <= ZOOM_MIN}
+        title={t('resourceView.zoomOut')}
+        aria-label={t('resourceView.zoomOut')}
+      >
+        −
+      </button>
+      <button
+        type="button"
+        onClick={() => setZoom(1)}
+        disabled={zoom === 1}
+        title={t('resourceView.zoomReset')}
+      >
+        {Math.round(zoom * 100)}%
+      </button>
+      <button
+        type="button"
+        onClick={() => changeZoom(ZOOM_STEP)}
+        disabled={zoom >= ZOOM_MAX}
+        title={t('resourceView.zoomIn')}
+        aria-label={t('resourceView.zoomIn')}
+      >
+        +
+      </button>
+    </span>
+  )
+
+  if (detail.type.toUpperCase() === 'MEDIA') {
+    const media = detail.content as MediaContent
+    if (!media.data) {
+      return <p className="muted">{t('resourceView.mediaMissing')}</p>
+    }
+    if (media.mediaType === 'image') {
+      return (
+        <div className="resource-view">
+          <div className="resource-view-toolbar">{zoomControls}</div>
+          <div className="resource-view-svg">
+            <div className="resource-view-svg-zoom" style={{ width: `${zoom * 100}%` }}>
+              <img className="resource-view-media-img" src={media.data} alt={detail.title} />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (media.mediaType === 'audio') {
+      return (
+        <div className="resource-view resource-view-media">
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <audio controls src={media.data}>
+            {t('resourceView.mediaUnsupported')}
+          </audio>
+        </div>
+      )
+    }
+    return (
+      <div className="resource-view resource-view-media">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video className="resource-view-media-video" controls src={media.data}>
+          {t('resourceView.mediaUnsupported')}
+        </video>
+      </div>
+    )
+  }
+
+  if (!doc) {
+    return <p className="muted">{t('resourceView.cannotPreview')}</p>
+  }
+
+  return (
+    <div className="resource-view">
+      <div className="resource-view-toolbar">
+        <button type="button" className={playing ? 'active' : ''} onClick={togglePlay}>
+          {playing ? t('resourceView.stop') : t('resourceView.listen')}
+        </button>
+        {zoomControls}
+      </div>
+      <div className="resource-view-svg">
+        <div className="resource-view-svg-zoom" style={{ width: `${zoom * 100}%` }}>
+          <TabSvg doc={doc} ink="#e5e7eb" background="#16171d" labels={buildTabLabels(t)} />
+        </div>
+      </div>
+    </div>
+  )
+}

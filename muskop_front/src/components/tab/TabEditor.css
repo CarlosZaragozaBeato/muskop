@@ -1,0 +1,586 @@
+.tab-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tab-editor-meta {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tab-editor-meta label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.tab-editor-meta input[type='text'] {
+  width: 14rem;
+}
+
+.tab-editor-meta input[type='number'] {
+  width: 5rem;
+}
+
+.tab-editor-tuning {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding-bottom: 0.4rem;
+  font-family: monospace;
+}
+
+.tab-editor-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 1.6rem;
+  background: var(--border);
+}
+
+.duration-group {
+  display: flex;
+  gap: 2px;
+}
+
+.duration-group button {
+  min-width: 2.2rem;
+  font-size: 1.1rem;
+}
+
+.duration-group button.active,
+.tab-editor-toolbar button.active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.export-menu {
+  position: relative;
+}
+
+.export-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.25rem;
+  z-index: 10;
+  min-width: 10rem;
+}
+
+.export-dropdown button {
+  border: none;
+  justify-content: flex-start;
+  border-radius: 4px;
+}
+
+.toast {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.tab-editor-help {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ===== Secciones ===== */
+
+.section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.section-name {
+  font-weight: 600;
+  width: 12rem;
+}
+
+.section-bpm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.section-bpm input {
+  width: 4.2rem;
+}
+
+.section-spacer {
+  flex: 1;
+}
+
+.add-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Rejilla ===== */
+
+.tab-editor-staff {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.75rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+}
+
+.tab-editor-staff:focus-visible {
+  border-color: var(--accent);
+}
+
+.string-labels {
+  display: flex;
+  flex-direction: column;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.string-labels span {
+  height: 26px;
+  display: flex;
+  align-items: center;
+}
+
+.string-labels .ruler-spacer {
+  height: 18px;
+}
+
+.string-labels .duration-spacer {
+  height: 20px;
+}
+
+.measures {
+  display: flex;
+}
+
+.measure {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--string-color);
+  border-right: 2px solid var(--string-color);
+}
+
+.measure + .measure {
+  border-left: none;
+}
+
+.ruler-row,
+.duration-row {
+  display: flex;
+}
+
+.ruler-cell,
+.duration-cell {
+  width: 26px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.ruler-row {
+  height: 18px;
+  align-items: center;
+}
+
+.ruler-cell.beat {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.duration-row {
+  height: 20px;
+  align-items: center;
+}
+
+.duration-cell {
+  font-size: 0.85rem;
+  color: var(--text);
+  opacity: 0.75;
+}
+
+.string-row {
+  display: flex;
+  height: 26px;
+}
+
+.cell {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cell::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--string-color);
+}
+
+.cell.beat-start {
+  border-left: 1px dashed color-mix(in srgb, var(--string-color) 35%, transparent);
+}
+
+.cell:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.cell.selected {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  outline: 1px solid var(--accent);
+}
+
+.cell.playing {
+  background: color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.fret {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  padding: 0 2px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* símbolo de técnica delante del traste (h, /, ~, ◇…) */
+.tech-mark {
+  font-size: 0.65rem;
+  color: var(--accent);
+  margin-right: 1px;
+}
+
+/* dedo de la mano derecha (PIMA) en la esquina de la casilla */
+.finger-mark {
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  z-index: 2;
+  font-family: monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 3px var(--bg);
+}
+
+/* ===== Barra de anotación (PIMA + técnicas) ===== */
+
+.annotation-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.annotation-bar button {
+  min-width: 2rem;
+  padding: 0.25rem 0.5rem;
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.annotation-bar button.active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.finger-btn {
+  color: var(--finger-color);
+}
+
+.finger-btn.active {
+  background: var(--finger-color) !important;
+  border-color: var(--finger-color) !important;
+  color: var(--on-accent) !important;
+}
+
+.annotation-hint {
+  font-size: 0.78rem;
+}
+
+/* ===== Notas de estudio ===== */
+
+.section-notes {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ===== Leyenda fingerstyle ===== */
+
+.fingerstyle-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.legend-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.legend-group strong {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  cursor: help;
+}
+
+.legend-finger,
+.legend-symbol {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.legend-symbol {
+  color: var(--accent);
+}
+
+.legend-help {
+  margin: 0;
+  font-size: 0.72rem;
+}
+
+/* ===== Acordes ===== */
+
+.chord-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.chord-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.chord-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+}
+
+.chord-card.playing {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px var(--success);
+}
+
+.chord-diagram {
+  color: var(--text);
+}
+
+.chord-name {
+  width: 6.5rem;
+  text-align: center;
+  font-weight: 600;
+  padding: 0.25rem 0.4rem;
+}
+
+.chord-frets {
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.chord-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chord-controls label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.chord-controls input {
+  width: 3.2rem;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.8rem;
+}
+
+.chord-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.chord-actions button {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.chord-add {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ===== Panel de librería (incrustar) ===== */
+
+.library-panel {
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: var(--surface);
+}
+
+.library-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.library-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.library-panel li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ===== Vista previa ===== */
+
+.preview-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-x: auto;
+  background: var(--bg);
+}
+
+.preview-panel svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== Móvil ===== */
+
+@media (max-width: 640px) {
+  .tab-editor-meta label {
+    flex: 1 1 auto;
+  }
+
+  .tab-editor-meta input[type='text'] {
+    width: 100%;
+    min-width: 10rem;
+  }
+
+  .tab-editor-tuning {
+    flex-basis: 100%;
+  }
+}
