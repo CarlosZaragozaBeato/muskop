@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.muskop.app"
+    namespace = "com.muskop.android"
     compileSdk = 36
 
     defaultConfig {
