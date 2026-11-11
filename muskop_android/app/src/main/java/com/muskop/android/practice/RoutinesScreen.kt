@@ -55,6 +55,8 @@ private const val FREE_PRACTICE = "free"
 fun RoutinesScreen(
     session: SessionDocument,
     padding: PaddingValues,
+    initialTarget: String? = null,
+    onInitialTargetConsumed: () -> Unit = {},
     onRecordPractice: (PracticeEntryInput) -> Unit,
     onSaveActive: (ActivePracticeSnapshot) -> Unit,
     onClearActive: () -> Unit,
@@ -66,6 +68,12 @@ fun RoutinesScreen(
     var target by rememberSaveable { mutableStateOf<String?>(null) }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var creatingRoutine by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(initialTarget) {
+        if (initialTarget != null) {
+            target = initialTarget
+            onInitialTargetConsumed()
+        }
+    }
     if (creatingRoutine || editingId != null) {
         RoutineEditorScreen(
             routine = routines.firstOrNull { it.id == editingId },

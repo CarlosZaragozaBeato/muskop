@@ -1,32 +1,31 @@
 package com.muskop.session
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption.ATOMIC_MOVE
-import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import java.io.File
+import java.io.FileOutputStream
 
 object SessionFileStore {
-    fun read(path: Path): SessionDocument = SessionImporter.fromJson(
-        Files.readString(path, StandardCharsets.UTF_8),
+    fun read(file: File): SessionDocument = SessionImporter.fromJson(
+        file.readBytes().toString(Charsets.UTF_8),
     )
 
-    fun writeAtomically(path: Path, session: SessionDocument) {
-        val parent = path.toAbsolutePath().parent
+    fun writeAtomically(file: File, session: SessionDocument) {
+        val parent = file.absoluteFile.parentFile
             ?: throw IllegalArgumentException("La sesión debe tener un directorio destino")
-        Files.createDirectories(parent)
-        val temporary = Files.createTempFile(parent, ".${path.fileName}.", ".tmp")
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw IllegalStateException("No se pudo crear el directorio de sesiones")
+        }
+        val temporary = File.createTempFile(".${file.name}.", ".tmp", parent)
 
         try {
-            Files.writeString(temporary, session.toJson(), StandardCharsets.UTF_8)
-            try {
-                Files.move(temporary, path, ATOMIC_MOVE, REPLACE_EXISTING)
-            } catch (_: AtomicMoveNotSupportedException) {
-                Files.move(temporary, path, REPLACE_EXISTING)
+            FileOutputStream(temporary).use { output ->
+                output.write(session.toJson().toByteArray(Charsets.UTF_8))
+                output.fd.sync()
+            }
+            if (!temporary.renameTo(file)) {
+                temporary.copyTo(file, overwrite = true)
             }
         } finally {
-            Files.deleteIfExists(temporary)
+            temporary.delete()
         }
     }
 }

@@ -17,7 +17,7 @@ class AndroidSessionRepository(context: Context) {
 
     suspend fun loadActive(): SessionDocument? = withContext(Dispatchers.IO) {
         if (!activeSessionFile.exists()) return@withContext null
-        SessionFileStore.read(activeSessionFile.toPath())
+        SessionFileStore.read(activeSessionFile)
     }
 
     suspend fun create(username: String): SessionDocument = withContext(Dispatchers.IO) {
@@ -34,7 +34,7 @@ class AndroidSessionRepository(context: Context) {
     }
 
     suspend fun save(session: SessionDocument) = withContext(Dispatchers.IO) {
-        SessionFileStore.writeAtomically(activeSessionFile.toPath(), session)
+        SessionFileStore.writeAtomically(activeSessionFile, session)
     }
 
     suspend fun exportTo(uri: Uri, session: SessionDocument) = withContext(Dispatchers.IO) {

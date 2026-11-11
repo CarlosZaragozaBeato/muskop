@@ -9,11 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,23 +34,27 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.muskop.android.R
 import com.muskop.android.library.LibraryScreen
 import com.muskop.android.practice.RoutinesScreen
 import com.muskop.android.progress.ProgressScreen
-import com.muskop.session.PracticeEntryInput
 import com.muskop.android.session.SessionUiState
+import com.muskop.session.ActivePracticeSnapshot
+import com.muskop.session.PracticeEntryInput
+import com.muskop.session.ResourceEditorInput
+import com.muskop.session.RoutineEditorInput
 import com.muskop.session.SessionDocument
 
-private enum class Destination(val label: String) {
-    Today("Hoy"),
-    Library("Biblioteca"),
-    Progress("Progreso"),
-    Routines("Rutinas"),
+private enum class Destination(val label: String, val icon: ImageVector) {
+    Home("Inicio", Icons.Rounded.Home),
+    Routines("Rutinas", Icons.Rounded.QueueMusic),
+    Library("Biblioteca", Icons.Rounded.LibraryMusic),
+    Progress("Progreso", Icons.Rounded.BarChart),
+    Settings("Ajustes", Icons.Rounded.Settings),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,12 +66,13 @@ fun MuskopApp(
     onExportSession: () -> Unit,
     onRetry: () -> Unit,
     onRecordPractice: (PracticeEntryInput) -> Unit,
-    onSaveActivePractice: (com.muskop.session.ActivePracticeSnapshot) -> Unit,
+    onSaveActivePractice: (ActivePracticeSnapshot) -> Unit,
     onClearActivePractice: () -> Unit,
-    onSaveRoutine: (com.muskop.session.RoutineEditorInput) -> Unit,
-    onSaveResource: (com.muskop.session.ResourceEditorInput) -> Unit,
+    onSaveRoutine: (RoutineEditorInput) -> Unit,
+    onSaveResource: (ResourceEditorInput) -> Unit,
 ) {
-    var destination by rememberSaveable { mutableStateOf(Destination.Today) }
+    var destination by rememberSaveable { mutableStateOf(Destination.Home) }
+    var pendingPractice by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -81,14 +91,16 @@ fun MuskopApp(
             )
         },
         bottomBar = {
-            NavigationBar {
-                Destination.entries.forEach { item ->
-                    NavigationBarItem(
-                        selected = destination == item,
-                        onClick = { destination = item },
-                        icon = { Text(item.label.first().toString()) },
-                        label = { Text(item.label) },
-                    )
+            if (state is SessionUiState.Ready) {
+                NavigationBar {
+                    Destination.entries.forEach { item ->
+                        NavigationBarItem(
+                            selected = destination == item,
+                            onClick = { destination = item },
+                            icon = { Icon(item.icon, contentDescription = item.label) },
+                            label = { Text(item.label) },
+                        )
+                    }
                 }
             }
         },
@@ -100,6 +112,12 @@ fun MuskopApp(
                 padding = padding,
                 destination = destination,
                 session = state.session,
+                pendingPractice = pendingPractice,
+                onStartPractice = { target ->
+                    pendingPractice = target
+                    destination = Destination.Routines
+                },
+                onPracticeConsumed = { pendingPractice = null },
                 onImportSession = onImportSession,
                 onExportSession = onExportSession,
                 onRecordPractice = onRecordPractice,
@@ -108,13 +126,42 @@ fun MuskopApp(
                 onSaveRoutine = onSaveRoutine,
                 onSaveResource = onSaveResource,
             )
-            is SessionUiState.Error -> ErrorContent(
-                padding = padding,
-                state = state,
-                onImportSession = onImportSession,
-                onRetry = onRetry,
-            )
+            is SessionUiState.Error -> ErrorContent(padding, state, onImportSession, onRetry)
         }
+    }
+}
+
+@Composable
+private fun DestinationContent(
+    padding: PaddingValues,
+    destination: Destination,
+    session: SessionDocument,
+    pendingPractice: String?,
+    onStartPractice: (String) -> Unit,
+    onPracticeConsumed: () -> Unit,
+    onImportSession: () -> Unit,
+    onExportSession: () -> Unit,
+    onRecordPractice: (PracticeEntryInput) -> Unit,
+    onSaveActivePractice: (ActivePracticeSnapshot) -> Unit,
+    onClearActivePractice: () -> Unit,
+    onSaveRoutine: (RoutineEditorInput) -> Unit,
+    onSaveResource: (ResourceEditorInput) -> Unit,
+) {
+    when (destination) {
+        Destination.Home -> HomeScreen(session, padding, onStartPractice)
+        Destination.Routines -> RoutinesScreen(
+            session = session,
+            padding = padding,
+            initialTarget = pendingPractice,
+            onInitialTargetConsumed = onPracticeConsumed,
+            onRecordPractice = onRecordPractice,
+            onSaveActive = onSaveActivePractice,
+            onClearActive = onClearActivePractice,
+            onSaveRoutine = onSaveRoutine,
+        )
+        Destination.Library -> LibraryScreen(session, padding, onSaveResource)
+        Destination.Progress -> ProgressScreen(session, padding)
+        Destination.Settings -> SettingsScreen(session, padding, onImportSession, onExportSession)
     }
 }
 
@@ -124,9 +171,7 @@ private fun LoadingContent(padding: PaddingValues) {
         modifier = Modifier.fillMaxSize().padding(padding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-    ) {
-        CircularProgressIndicator()
-    }
+    ) { CircularProgressIndicator() }
 }
 
 @Composable
@@ -152,84 +197,7 @@ private fun WelcomeContent(
         Button(onClick = { onCreateSession(username) }, enabled = username.isNotBlank()) {
             Text("Crear sesión")
         }
-        HorizontalDivider()
-        Button(onClick = onImportSession, modifier = Modifier.fillMaxWidth()) {
-            Text("Importar sesión .muskop.json")
-        }
-    }
-}
-
-@Composable
-private fun DestinationContent(
-    padding: PaddingValues,
-    destination: Destination,
-    session: SessionDocument,
-    onImportSession: () -> Unit,
-    onExportSession: () -> Unit,
-    onRecordPractice: (PracticeEntryInput) -> Unit,
-    onSaveActivePractice: (com.muskop.session.ActivePracticeSnapshot) -> Unit,
-    onClearActivePractice: () -> Unit,
-    onSaveRoutine: (com.muskop.session.RoutineEditorInput) -> Unit,
-    onSaveResource: (com.muskop.session.ResourceEditorInput) -> Unit,
-) {
-    if (destination == Destination.Library) {
-        LibraryScreen(session = session, padding = padding, onSaveResource = onSaveResource)
-        return
-    }
-    if (destination == Destination.Routines) {
-        RoutinesScreen(
-            session = session,
-            padding = padding,
-            onRecordPractice = onRecordPractice,
-            onSaveActive = onSaveActivePractice,
-            onClearActive = onClearActivePractice,
-            onSaveRoutine = onSaveRoutine,
-        )
-        return
-    }
-    if (destination == Destination.Progress) {
-        ProgressScreen(session = session, padding = padding)
-        return
-    }
-    if (destination != Destination.Today) {
-        PlaceholderContent(padding, destination)
-        return
-    }
-
-    val inventory = session.inventory()
-    Column(
-        modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text("Hola, ${session.username}", style = MaterialTheme.typography.headlineMedium)
-        Text("La sesión v${session.version} está guardada localmente.")
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Resumen de tu sesión", fontWeight = FontWeight.SemiBold)
-                Text("${inventory.resources} recursos · ${inventory.routines} rutinas")
-                Text("${inventory.practiceEntries} registros de práctica")
-                Text("${inventory.projects} proyectos · ${inventory.trashItems} en papelera")
-            }
-        }
-        Button(onClick = onExportSession, modifier = Modifier.fillMaxWidth()) {
-            Text("Exportar copia de seguridad")
-        }
-        Button(onClick = onImportSession, modifier = Modifier.fillMaxWidth()) {
-            Text("Importar otra sesión")
-        }
-        Text("Abre Rutinas para iniciar una rutina o una práctica libre.")
-    }
-}
-
-@Composable
-private fun PlaceholderContent(padding: PaddingValues, destination: Destination) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(destination.label, style = MaterialTheme.typography.headlineMedium)
-        Text("Este flujo se implementará sobre la sesión ya preservada.")
+        Button(onClick = onImportSession) { Text("Importar sesión") }
     }
 }
 

@@ -46,9 +46,9 @@ class SessionMigrationTest {
         val destination = createTempDirectory("muskop-session-test").resolve("Carlos.muskop.json")
         val session = SessionImporter.fromJson(fixture("session-v1-current.json"))
 
-        SessionFileStore.writeAtomically(destination, session)
+        SessionFileStore.writeAtomically(destination.toFile(), session)
 
-        assertEquals(session.toJsonObject(), SessionFileStore.read(destination).toJsonObject())
+        assertEquals(session.toJsonObject(), SessionFileStore.read(destination.toFile()).toJsonObject())
     }
 
     @Test
