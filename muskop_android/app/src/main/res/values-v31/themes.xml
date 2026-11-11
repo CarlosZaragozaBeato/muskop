@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Muskop" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">#1F2430</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#1F2430</item>
+    </style>
+</resources>

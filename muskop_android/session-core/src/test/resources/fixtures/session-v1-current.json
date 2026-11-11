@@ -1,0 +1,90 @@
+{
+  "muskopSession": 1,
+  "user": {
+    "username": "Carlos",
+    "label": null,
+    "createdAt": "2026-07-21T03:53:43.738Z",
+    "updatedAt": "2026-11-11T14:19:43.625Z"
+  },
+  "resources": [
+    {
+      "id": "resource-1",
+      "title": "Royal Road",
+      "type": "TAB",
+      "category": "cambios-acordes",
+      "content": {
+        "version": 2,
+        "baseBpm": 60,
+        "sections": [
+          {
+            "id": "section-1",
+            "kind": "fingerstyle",
+            "name": "Subida",
+            "bpm": 60,
+            "notes": "Relaja la mano",
+            "measures": [
+              {
+                "events": [
+                  {
+                    "beat": 1,
+                    "notes": [{ "string": 6, "fret": 3, "finger": "p" }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "exercise": { "skill": "cambios-acordes", "level": 8, "description": "Progresión" },
+      "tags": ["bloque-5", "maj7"]
+    }
+  ],
+  "routines": [
+    {
+      "id": "routine-1",
+      "name": "Royal Road",
+      "description": null,
+      "category": "cambios-acordes",
+      "blocks": [
+        {
+          "id": "block-1",
+          "name": "Reto",
+          "minutes": 10,
+          "bpm": 85,
+          "beatsPerMeasure": 4,
+          "subdivision": 4,
+          "resourceId": "resource-1",
+          "skill": "cambios-acordes",
+          "notes": "Limpio"
+        }
+      ]
+    }
+  ],
+  "practiceLog": [
+    {
+      "date": "2026-11-11",
+      "routineId": "free",
+      "routineName": "Free practice",
+      "minutes": 10,
+      "completed": false,
+      "skillMinutes": { "cambios-acordes": 10 }
+    }
+  ],
+  "experience": null,
+  "bonusXp": 100,
+  "goals": { "weekly": 700, "monthly": 3000, "yearly": 10000 },
+  "goalsClaimed": ["w-2026-11-09"],
+  "achievements": ["firstSteps"],
+  "settings": {},
+  "activePractice": null,
+  "bestSessionMinutes": 14,
+  "challengesClaimed": ["daily-1"],
+  "dayNotes": { "2026-11-11": "Buen día" },
+  "projects": [{ "id": "project-1", "title": "Canción" }],
+  "schedule": [{ "date": "2026-11-12", "routineId": "routine-1" }],
+  "skillGoals": { "cambios-acordes": 500 },
+  "skillGoalsClaimed": ["cambios-acordes-1"],
+  "streakFreezes": [],
+  "trash": [{ "id": "trash-1", "kind": "resource", "resource": { "id": "old-1" } }]
+}
+
