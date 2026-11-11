@@ -34,7 +34,7 @@ fun TabSectionEditor(
     var selectedFret by remember { mutableIntStateOf(0) }
     var selectedFinger by remember { mutableStateOf<String?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Secciones")
+        Text("Sections")
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             (0..24).forEach { fret ->
                 TextButton(onClick = { selectedFret = fret }) { Text(if (selectedFret == fret) "[$fret]" else "$fret") }
@@ -47,22 +47,22 @@ fun TabSectionEditor(
         }
         sections.forEachIndexed { index, section ->
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedTextField(section.name, { value -> onChange(sections.updated(index, section.copy(name = value))) }, Modifier.fillMaxWidth(), label = { Text("Nombre") })
+                OutlinedTextField(section.name, { value -> onChange(sections.updated(index, section.copy(name = value))) }, Modifier.fillMaxWidth(), label = { Text("Name") })
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(section.kind, { value -> onChange(sections.updated(index, section.copy(kind = value))) }, Modifier.weight(1f), label = { Text("Tipo") })
+                    OutlinedTextField(section.kind, { value -> onChange(sections.updated(index, section.copy(kind = value))) }, Modifier.weight(1f), label = { Text("Type") })
                     OutlinedTextField(section.bpm?.toString().orEmpty(), { value -> onChange(sections.updated(index, section.copy(bpm = value.toIntOrNull()))) }, Modifier.weight(1f), label = { Text("BPM") })
                 }
-                OutlinedTextField(section.notes.orEmpty(), { value -> onChange(sections.updated(index, section.copy(notes = value.ifBlank { null }))) }, Modifier.fillMaxWidth(), label = { Text("Notas") }, minLines = 2)
+                OutlinedTextField(section.notes.orEmpty(), { value -> onChange(sections.updated(index, section.copy(notes = value.ifBlank { null }))) }, Modifier.fillMaxWidth(), label = { Text("Notes") }, minLines = 2)
                 val sectionId = section.id
                 val sectionJson = (content as? JsonObject)?.get("sections") as? JsonArray
                 val measureList = sectionJson.orEmpty().mapNotNull { it as? JsonObject }
                     .firstOrNull { it["id"]?.toString()?.trim('"') == sectionId }
                     ?.get("measures") as? JsonArray
                 if (sectionId != null && section.kind != "chords") {
-                    Text("Compases")
+                    Text("Measures")
                     measureList.orEmpty().forEachIndexed { measureIndex, element ->
                         val measure = element as? JsonObject ?: return@forEachIndexed
-                        Text("Compás ${measureIndex + 1}")
+                        Text("Measure ${measureIndex + 1}")
                         TabMeasureGrid(measure) { beat, string, currentFret ->
                             val note = if (currentFret == null) TabNoteInput(string, selectedFret, selectedFinger) else null
                             onMeasureChange(sectionId, measureIndex, updateMeasureNote(measure, beat, string, note?.fret, note?.finger))
@@ -72,12 +72,12 @@ fun TabSectionEditor(
                         val measures = measureList.orEmpty().toMutableList()
                         measures += JsonObject(mapOf("events" to JsonArray(emptyList())))
                         onMeasureChange(sectionId, measures.lastIndex, measures.last() as JsonObject)
-                    }) { Text("+ Añadir compás") }
+                    }) { Text("+ Add measure") }
                 }
-                TextButton(onClick = { onChange(sections.toMutableList().apply { removeAt(index) }) }) { Text("Eliminar sección") }
+                TextButton(onClick = { onChange(sections.toMutableList().apply { removeAt(index) }) }) { Text("Delete section") }
             }
         }
-        TextButton(onClick = { onChange(sections + TabSectionInput(java.util.UUID.randomUUID().toString(), "fingerstyle", "Nueva sección", null, null)) }) { Text("+ Añadir sección") }
+        TextButton(onClick = { onChange(sections + TabSectionInput(java.util.UUID.randomUUID().toString(), "fingerstyle", "New section", null, null)) }) { Text("+ Add section") }
     }
 }
 

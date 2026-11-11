@@ -10,8 +10,8 @@ import kotlinx.serialization.json.jsonPrimitive
 data class TabNoteInput(val string: Int, val fret: Int, val finger: String? = null)
 
 fun updateMeasureEvent(measure: JsonObject, beat: Double, notes: List<TabNoteInput>): JsonObject {
-    require(beat in 1.0..4.75 && (beat * 4).toInt().toDouble() == beat * 4) { "Beat inválido" }
-    require(notes.all { it.string in 1..6 && it.fret in 0..24 }) { "Nota fuera de rango" }
+    require(beat in 1.0..4.75 && (beat * 4).toInt().toDouble() == beat * 4) { "Invalid beat" }
+    require(notes.all { it.string in 1..6 && it.fret in 0..24 }) { "Note out of range" }
     val events = (measure["events"] as? JsonArray).orEmpty()
     val existing = events.firstOrNull { event ->
         (event as? JsonObject)?.get("beat")?.jsonPrimitive?.doubleOrNull == beat
@@ -35,10 +35,10 @@ fun updateMeasureNote(
     fret: Int?,
     finger: String?,
 ): JsonObject {
-    require(beat in 1.0..4.75 && (beat * 4).toInt().toDouble() == beat * 4) { "Beat inválido" }
-    require(string in 1..6) { "Cuerda inválida" }
-    require(fret == null || fret in 0..24) { "Traste inválido" }
-    require(finger == null || finger in setOf("p", "i", "m", "a")) { "Digitación inválida" }
+    require(beat in 1.0..4.75 && (beat * 4).toInt().toDouble() == beat * 4) { "Invalid beat" }
+    require(string in 1..6) { "Invalid string" }
+    require(fret == null || fret in 0..24) { "Invalid fret" }
+    require(finger == null || finger in setOf("p", "i", "m", "a")) { "Invalid fingering" }
     val events = (measure["events"] as? JsonArray).orEmpty()
     val event = events.firstOrNull { item ->
         (item as? JsonObject)?.get("beat")?.jsonPrimitive?.doubleOrNull == beat

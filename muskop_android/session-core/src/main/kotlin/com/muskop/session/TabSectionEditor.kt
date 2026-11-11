@@ -26,7 +26,7 @@ fun updateTabSectionMeasures(content: JsonElement, sectionId: String, measureInd
         else current + JsonObject(mapOf(
             "id" to JsonPrimitive(sectionId),
             "kind" to JsonPrimitive("fingerstyle"),
-            "name" to JsonPrimitive("Nueva sección"),
+            "name" to JsonPrimitive("New section"),
             "measures" to JsonArray(listOf(measure)),
         ))
     }

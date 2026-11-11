@@ -40,10 +40,10 @@ class AndroidSessionRepository(context: Context) {
     suspend fun exportTo(uri: Uri, session: SessionDocument) = withContext(Dispatchers.IO) {
         appContext.contentResolver.openOutputStream(uri, "wt")
             ?.use { stream -> stream.write(session.toJson().toByteArray(Charsets.UTF_8)) }
-            ?: throw IllegalStateException("No se pudo abrir el destino de exportación")
+            ?: throw IllegalStateException("The export destination could not be opened")
     }
 
     private fun ContentResolver.readText(uri: Uri): String = openInputStream(uri)
         ?.use { stream -> stream.readBytes().toString(Charsets.UTF_8) }
-        ?: throw IllegalArgumentException("No se pudo abrir el archivo seleccionado")
+        ?: throw IllegalArgumentException("The selected file could not be opened")
 }

@@ -38,7 +38,7 @@ fun SettingsScreen(
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        item { Text("Ajustes", style = MaterialTheme.typography.headlineMedium) }
+        item { Text("Settings", style = MaterialTheme.typography.headlineMedium) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -46,27 +46,27 @@ fun SettingsScreen(
                         Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Column {
                             Text(session.username, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text("Sesión Muskop v${session.version}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Muskop session v${session.version}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Icon(Icons.Rounded.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text("${inventory.resources} recursos · ${inventory.routines} rutinas · ${inventory.practiceEntries} prácticas")
+                        Text("${inventory.resources} resources · ${inventory.routines} routines · ${inventory.practiceEntries} practices")
                     }
                 }
             }
         }
-        item { Text("Archivo de sesión", style = MaterialTheme.typography.titleLarge) }
+        item { Text("Session file", style = MaterialTheme.typography.titleLarge) }
         item {
             FilledTonalButton(onClick = onExportSession, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Rounded.Download, contentDescription = null)
-                Text("Exportar copia de seguridad", Modifier.padding(start = 10.dp))
+                Text("Export backup", Modifier.padding(start = 10.dp))
             }
         }
         item {
             FilledTonalButton(onClick = onImportSession, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Rounded.FileUpload, contentDescription = null)
-                Text("Importar otra sesión", Modifier.padding(start = 10.dp))
+                Text("Import another session", Modifier.padding(start = 10.dp))
             }
         }
     }

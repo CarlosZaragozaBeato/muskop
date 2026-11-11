@@ -25,15 +25,15 @@ data class RoutineEditorInput(
 )
 
 fun SessionDocument.saveRoutine(input: RoutineEditorInput): SessionDocument {
-    require(input.name.isNotBlank()) { "El nombre de la rutina es obligatorio" }
-    require(input.blocks.isNotEmpty()) { "La rutina necesita al menos un bloque" }
+    require(input.name.isNotBlank()) { "Routine name is required" }
+    require(input.blocks.isNotEmpty()) { "A routine needs at least one block" }
     require(input.blocks.all { it.name.isNotBlank() && it.minutes in 1..240 }) {
-        "Cada bloque necesita nombre y una duración de 1 a 240 minutos"
+        "Each block needs a name and a duration from 1 to 240 minutes"
     }
-    require(input.blocks.all { it.bpm == null || it.bpm in 20..300 }) { "El BPM debe estar entre 20 y 300" }
+    require(input.blocks.all { it.bpm == null || it.bpm in 20..300 }) { "BPM must be between 20 and 300" }
 
     val routines = root["routines"] as? JsonArray
-        ?: throw SessionFormatException("El campo routines debe ser una lista JSON")
+        ?: throw SessionFormatException("The routines field must be a JSON array")
     val routineId = input.id ?: UUID.randomUUID().toString()
     val existing = routines.mapNotNull { it as? JsonObject }.firstOrNull { it.stringValue("id") == routineId }
     val existingBlocks = existing?.objectList("blocks").orEmpty().associateBy { it.stringValue("id") }

@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,11 +50,11 @@ import com.muskop.session.RoutineEditorInput
 import com.muskop.session.SessionDocument
 
 private enum class Destination(val label: String, val icon: ImageVector) {
-    Home("Inicio", Icons.Rounded.Home),
-    Routines("Rutinas", Icons.Rounded.QueueMusic),
-    Library("Biblioteca", Icons.Rounded.LibraryMusic),
-    Progress("Progreso", Icons.Rounded.BarChart),
-    Settings("Ajustes", Icons.Rounded.Settings),
+    Home("Home", Icons.Rounded.Home),
+    Routines("Routines", Icons.AutoMirrored.Rounded.QueueMusic),
+    Library("Library", Icons.Rounded.LibraryMusic),
+    Progress("Progress", Icons.Rounded.BarChart),
+    Settings("Settings", Icons.Rounded.Settings),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -185,19 +185,19 @@ private fun WelcomeContent(
         modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Tu práctica de guitarra, en tus archivos", style = MaterialTheme.typography.headlineSmall)
-        Text("Crea una sesión local o importa una copia existente.")
+        Text("Your guitar practice, in your files", style = MaterialTheme.typography.headlineSmall)
+        Text("Create a local session or import an existing one.")
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Nombre de la sesión") },
+            label = { Text("Session name") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
         Button(onClick = { onCreateSession(username) }, enabled = username.isNotBlank()) {
-            Text("Crear sesión")
+            Text("Create session")
         }
-        Button(onClick = onImportSession) { Text("Importar sesión") }
+        Button(onClick = onImportSession) { Text("Import session") }
     }
 }
 
@@ -212,9 +212,9 @@ private fun ErrorContent(
         modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("No se pudo abrir la sesión", style = MaterialTheme.typography.headlineSmall)
+        Text("The session could not be opened", style = MaterialTheme.typography.headlineSmall)
         Text(state.message)
-        Button(onClick = onRetry) { Text("Reintentar") }
-        Button(onClick = onImportSession) { Text("Elegir otro archivo") }
+        Button(onClick = onRetry) { Text("Try again") }
+        Button(onClick = onImportSession) { Text("Choose another file") }
     }
 }

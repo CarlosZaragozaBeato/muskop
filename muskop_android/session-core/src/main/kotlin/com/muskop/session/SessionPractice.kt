@@ -49,7 +49,7 @@ fun SessionDocument.routines(): List<PracticeRoutine> = (root["routines"] as? Js
                 val blockId = block.stringValue("id") ?: return@blockMap null
                 PracticeBlock(
                     id = blockId,
-                    name = block.stringValue("name") ?: "Bloque",
+                    name = block.stringValue("name") ?: "Block",
                     minutes = block["minutes"]?.jsonPrimitive?.intOrNull?.coerceAtLeast(1) ?: 5,
                     bpm = block["bpm"]?.jsonPrimitive?.intOrNull,
                     resourceId = block.stringValue("resourceId"),
@@ -63,13 +63,13 @@ fun SessionDocument.routines(): List<PracticeRoutine> = (root["routines"] as? Js
 fun PracticeRoutine.totalMinutes(): Int = blocks.sumOf(PracticeBlock::minutes)
 
 fun SessionDocument.recordPractice(entry: PracticeEntryInput): SessionDocument {
-    require(entry.date.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) { "La fecha debe tener formato YYYY-MM-DD" }
-    require(entry.routineId.isNotBlank()) { "routineId es obligatorio" }
-    require(entry.minutes > 0) { "Los minutos de práctica deben ser positivos" }
-    require(entry.skillMinutes.values.all { it >= 0 }) { "Los minutos por habilidad no pueden ser negativos" }
+    require(entry.date.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) { "Date must use the YYYY-MM-DD format" }
+    require(entry.routineId.isNotBlank()) { "routineId is required" }
+    require(entry.minutes > 0) { "Practice minutes must be positive" }
+    require(entry.skillMinutes.values.all { it >= 0 }) { "Skill minutes cannot be negative" }
 
     val practiceLog = root["practiceLog"] as? JsonArray
-        ?: throw SessionFormatException("El campo practiceLog debe ser una lista JSON")
+        ?: throw SessionFormatException("The practiceLog field must be a JSON array")
     val normalizedSkills = entry.skillMinutes.filterValues { it > 0 }
     val newEntry = buildMap<String, kotlinx.serialization.json.JsonElement> {
         put("date", JsonPrimitive(entry.date))

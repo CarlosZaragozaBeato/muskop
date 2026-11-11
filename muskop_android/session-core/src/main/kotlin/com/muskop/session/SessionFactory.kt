@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonPrimitive
 object SessionFactory {
     fun create(username: String): SessionDocument {
         val normalizedUsername = username.trim()
-        require(normalizedUsername.isNotEmpty()) { "El nombre de usuario es obligatorio" }
+        require(normalizedUsername.isNotEmpty()) { "Username is required" }
 
         val now = Instant.now().toString()
         return SessionImporter.fromObject(

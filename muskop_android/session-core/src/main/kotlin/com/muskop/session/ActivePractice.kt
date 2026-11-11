@@ -34,8 +34,8 @@ fun SessionDocument.activePractice(): ActivePracticeSnapshot? {
 }
 
 fun SessionDocument.saveActivePractice(snapshot: ActivePracticeSnapshot): SessionDocument {
-    require(snapshot.kind in setOf("free", "routine")) { "Tipo de práctica activa no válido" }
-    require(snapshot.routineId.isNotBlank()) { "routineId es obligatorio" }
+    require(snapshot.kind in setOf("free", "routine")) { "Invalid active practice type" }
+    require(snapshot.routineId.isNotBlank()) { "routineId is required" }
     val active = buildMap<String, kotlinx.serialization.json.JsonElement> {
         put("kind", JsonPrimitive(snapshot.kind))
         put("routineId", JsonPrimitive(snapshot.routineId))
@@ -61,7 +61,7 @@ internal fun SessionDocument.withRootValues(
     values: Map<String, kotlinx.serialization.json.JsonElement>,
 ): SessionDocument {
     val user = root["user"] as? JsonObject
-        ?: throw SessionFormatException("Falta el objeto user en la sesión")
+        ?: throw SessionFormatException("The session is missing the user object")
     val updatedUser = JsonObject(
         user.toMutableMap().apply { this["updatedAt"] = JsonPrimitive(Instant.now().toString()) },
     )

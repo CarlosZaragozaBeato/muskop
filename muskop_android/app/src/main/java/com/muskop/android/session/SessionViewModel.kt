@@ -45,7 +45,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             mutableState.value = runCatching { repository.loadActive() }
                 .fold(
                     onSuccess = { session -> session?.let(SessionUiState::Ready) ?: SessionUiState.Empty },
-                    onFailure = { error -> SessionUiState.Error(error.message ?: "No se pudo abrir la sesión") },
+                    onFailure = { error -> SessionUiState.Error(error.message ?: "The session could not be opened") },
                 )
         }
     }
@@ -56,7 +56,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             mutableState.value = runCatching { repository.create(username) }
                 .fold(
                     onSuccess = SessionUiState::Ready,
-                    onFailure = { error -> SessionUiState.Error(error.message ?: "No se pudo crear la sesión") },
+                    onFailure = { error -> SessionUiState.Error(error.message ?: "The session could not be created") },
                 )
         }
     }
@@ -69,7 +69,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
                 .fold(
                     onSuccess = SessionUiState::Ready,
                     onFailure = { error ->
-                        SessionUiState.Error(error.message ?: "No se pudo importar la sesión", retained)
+                        SessionUiState.Error(error.message ?: "The session could not be imported", retained)
                     },
                 )
         }
@@ -84,30 +84,30 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             }.fold(
                 onSuccess = SessionUiState::Ready,
                 onFailure = { error ->
-                    SessionUiState.Error(error.message ?: "No se pudo exportar la sesión", session)
+                    SessionUiState.Error(error.message ?: "The session could not be exported", session)
                 },
             )
         }
     }
 
     fun recordPractice(entry: PracticeEntryInput) {
-        mutateSession("No se pudo guardar la práctica") { session -> session.recordPractice(entry) }
+        mutateSession("The practice could not be saved") { session -> session.recordPractice(entry) }
     }
 
     fun saveActivePractice(snapshot: ActivePracticeSnapshot) {
-        mutateSession("No se pudo guardar la práctica activa") { session -> session.saveActivePractice(snapshot) }
+        mutateSession("The active practice could not be saved") { session -> session.saveActivePractice(snapshot) }
     }
 
     fun clearActivePractice() {
-        mutateSession("No se pudo limpiar la práctica activa") { session -> session.clearActivePractice() }
+        mutateSession("The active practice could not be cleared") { session -> session.clearActivePractice() }
     }
 
     fun saveRoutine(input: RoutineEditorInput) {
-        mutateSession("No se pudo guardar la rutina") { session -> session.saveRoutine(input) }
+        mutateSession("The routine could not be saved") { session -> session.saveRoutine(input) }
     }
 
     fun saveResource(input: ResourceEditorInput) {
-        mutateSession("No se pudo guardar el recurso") { session -> session.saveResource(input) }
+        mutateSession("The resource could not be saved") { session -> session.saveResource(input) }
     }
 
     private fun mutateSession(errorMessage: String, update: (SessionDocument) -> SessionDocument) {

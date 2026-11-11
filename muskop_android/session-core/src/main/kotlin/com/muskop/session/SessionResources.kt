@@ -53,7 +53,7 @@ fun SessionResource.tabSections(): List<TabSection> {
         TabSection(
             id = section.stringValue("id"),
             kind = section.stringValue("kind") ?: "tab",
-            name = section.stringValue("name") ?: "Sin nombre",
+            name = section.stringValue("name") ?: "Untitled",
             bpm = section["bpm"]?.jsonPrimitive?.intOrNull,
             notes = section.stringValue("notes"),
             measures = section.objectList("measures"),

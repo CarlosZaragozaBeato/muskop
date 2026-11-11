@@ -20,14 +20,14 @@ object SessionImporter {
         val root = try {
             parser.parseToJsonElement(text).jsonObject
         } catch (error: Exception) {
-            throw SessionFormatException("El archivo no contiene una sesión JSON válida", error)
+            throw SessionFormatException("The file does not contain a valid JSON session", error)
         }
         return fromObject(root)
     }
 
     fun fromObject(root: JsonObject): SessionDocument {
         val version = root["muskopSession"]?.jsonPrimitive?.intOrNull
-            ?: throw SessionFormatException("Falta muskopSession o no es un número entero")
+            ?: throw SessionFormatException("muskopSession is missing or is not an integer")
 
         validateEnvelope(root)
 
@@ -35,10 +35,10 @@ object SessionImporter {
             1 -> migrateV1(root)
             CURRENT_SESSION_VERSION -> root
             in 0 until CURRENT_SESSION_VERSION -> throw SessionFormatException(
-                "La versión de sesión $version no tiene migrador disponible",
+                "Session version $version has no available migrator",
             )
             else -> throw SessionFormatException(
-                "La sesión usa la versión $version, más reciente que la app ($CURRENT_SESSION_VERSION)",
+                "The session uses version $version, which is newer than the app ($CURRENT_SESSION_VERSION)",
             )
         }
 
@@ -53,15 +53,15 @@ object SessionImporter {
 
     private fun validateEnvelope(root: JsonObject) {
         val user = root["user"] as? JsonObject
-            ?: throw SessionFormatException("Falta el objeto user en la sesión")
+            ?: throw SessionFormatException("The session is missing the user object")
         val username = user["username"]?.jsonPrimitive?.contentOrNull
         if (username.isNullOrBlank()) {
-            throw SessionFormatException("Falta user.username en la sesión")
+            throw SessionFormatException("The session is missing user.username")
         }
 
         for (key in REQUIRED_COLLECTIONS) {
             if (root[key] !is kotlinx.serialization.json.JsonArray) {
-                throw SessionFormatException("El campo $key debe ser una lista JSON")
+                throw SessionFormatException("The $key field must be a JSON array")
             }
         }
     }

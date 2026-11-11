@@ -17,10 +17,10 @@ data class ResourceEditorInput(
 )
 
 fun SessionDocument.saveResource(input: ResourceEditorInput): SessionDocument {
-    require(input.title.isNotBlank()) { "El título del recurso es obligatorio" }
-    require(input.type.isNotBlank()) { "El tipo de recurso es obligatorio" }
+    require(input.title.isNotBlank()) { "Resource title is required" }
+    require(input.type.isNotBlank()) { "Resource type is required" }
     val resources = root["resources"] as? JsonArray
-        ?: throw SessionFormatException("El campo resources debe ser una lista JSON")
+        ?: throw SessionFormatException("The resources field must be a JSON array")
     val id = input.id ?: UUID.randomUUID().toString()
     val existing = resources.mapNotNull { it as? JsonObject }.firstOrNull { it.stringValue("id") == id }
     val updated = JsonObject(

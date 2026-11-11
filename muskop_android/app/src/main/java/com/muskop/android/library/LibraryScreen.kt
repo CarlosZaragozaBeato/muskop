@@ -104,22 +104,22 @@ private fun ResourceList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Text("Biblioteca", style = MaterialTheme.typography.headlineMedium)
+            Text("Library", style = MaterialTheme.typography.headlineMedium)
         }
-        item { TextButton(onClick = onNewTheory) { Text("+ Nueva nota de teoría") } }
+        item { TextButton(onClick = onNewTheory) { Text("+ New theory note") } }
         item {
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text("Buscar recursos") },
+                label = { Text("Search resources") },
             )
         }
         if (types.isNotEmpty()) {
             item {
                 FilterRow(
-                    label = "Tipo",
+                    label = "Type",
                     values = types,
                     selected = selectedType,
                     onSelect = { selectedType = if (selectedType == it) null else it },
@@ -129,7 +129,7 @@ private fun ResourceList(
         if (tags.isNotEmpty()) {
             item {
                 FilterRow(
-                    label = "Etiquetas",
+                    label = "Tags",
                     values = tags,
                     selected = selectedTag,
                     onSelect = { selectedTag = if (selectedTag == it) null else it },
@@ -137,7 +137,7 @@ private fun ResourceList(
             }
         }
         if (filtered.isEmpty()) {
-            item { Text("No hay recursos que coincidan con los filtros.") }
+            item { Text("No resources match these filters.") }
         }
         items(filtered, key = SessionResource::id) { resource ->
             Card(
@@ -192,8 +192,8 @@ private fun ResourceViewer(resource: SessionResource, padding: PaddingValues, on
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { TextButton(onClick = onBack) { Text("← Volver a la biblioteca") } }
-        item { TextButton(onClick = { onEdit(resource) }) { Text("Editar") } }
+        item { TextButton(onClick = onBack) { Text("← Back to library") } }
+        item { TextButton(onClick = { onEdit(resource) }) { Text("Edit") } }
         item { Text(resource.title, style = MaterialTheme.typography.headlineSmall) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -202,7 +202,7 @@ private fun ResourceViewer(resource: SessionResource, padding: PaddingValues, on
             }
         }
         if (resource.tags.isNotEmpty()) {
-            item { Text("Etiquetas: ${resource.tags.joinToString()}") }
+            item { Text("Tags: ${resource.tags.joinToString()}") }
         }
         item { ResourcePreview(resource) }
     }
@@ -214,7 +214,7 @@ fun ResourcePreview(resource: SessionResource) {
         resource.type.equals("TAB", ignoreCase = true) -> {
             val sections = resource.tabSections()
             if (sections.isEmpty()) {
-                Text("Esta tablatura no contiene secciones visibles.")
+                Text("This tablature has no visible sections.")
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     sections.forEach { section -> TabSectionViewer(section) }
@@ -222,7 +222,7 @@ fun ResourcePreview(resource: SessionResource) {
             }
         }
         resource.type.equals("THEORY", ignoreCase = true) -> Text(theoryBody(resource))
-        else -> Text("Este tipo de recurso se conservará y tendrá visor propio en una próxima entrega.")
+        else -> Text("This resource type is preserved and will receive its own viewer in a future iteration.")
     }
 }
 
@@ -234,7 +234,7 @@ private fun TabSectionViewer(section: TabSection) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(section.name, style = MaterialTheme.typography.titleMedium)
-            Text("${section.kind} · ${section.bpm?.let { "$it BPM" } ?: "tempo del documento"}")
+            Text("${section.kind} · ${section.bpm?.let { "$it BPM" } ?: "document tempo"}")
             section.notes?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             if (section.measures.isNotEmpty()) {
                 Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
@@ -245,7 +245,7 @@ private fun TabSectionViewer(section: TabSection) {
             }
             if (section.chords.isNotEmpty()) {
                 Text(section.chords.joinToString(separator = " · ") { chord ->
-                    chord["name"]?.jsonPrimitive?.contentOrNull ?: "Acorde"
+                    chord["name"]?.jsonPrimitive?.contentOrNull ?: "Chord"
                 })
             }
         }
@@ -260,7 +260,7 @@ private fun TabMeasure(measure: JsonObject, number: Int) {
     val noteColor = MaterialTheme.colorScheme.primary
 
     Column(modifier = Modifier.width(240.dp)) {
-        Text("Compás $number", style = MaterialTheme.typography.labelMedium)
+        Text("Measure $number", style = MaterialTheme.typography.labelMedium)
         Canvas(modifier = Modifier.fillMaxWidth().height(132.dp)) {
             val left = 18f
             val top = 18f
@@ -311,4 +311,4 @@ private fun theoryBody(resource: SessionResource): String = (resource.content as
     ?.get("body")
     ?.jsonPrimitive
     ?.contentOrNull
-    ?: "Este recurso de teoría no tiene texto disponible."
+    ?: "This theory resource has no text content."

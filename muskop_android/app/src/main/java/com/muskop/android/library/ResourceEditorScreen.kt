@@ -51,13 +51,13 @@ fun ResourceEditorScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { TextButton(onClick = onBack) { Text("← Volver a biblioteca") } }
-        item { Text(if (resource == null) "Nueva nota" else "Editar recurso") }
-        item { OutlinedTextField(title, { title = it }, Modifier.fillMaxWidth(), label = { Text("Título") }, singleLine = true) }
-        item { OutlinedTextField(category, { category = it }, Modifier.fillMaxWidth(), label = { Text("Categoría") }, singleLine = true) }
-        item { OutlinedTextField(tags, { tags = it }, Modifier.fillMaxWidth(), label = { Text("Etiquetas separadas por comas") }, singleLine = true) }
+        item { TextButton(onClick = onBack) { Text("← Back to library") } }
+        item { Text(if (resource == null) "New note" else "Edit resource") }
+        item { OutlinedTextField(title, { title = it }, Modifier.fillMaxWidth(), label = { Text("Title") }, singleLine = true) }
+        item { OutlinedTextField(category, { category = it }, Modifier.fillMaxWidth(), label = { Text("Category") }, singleLine = true) }
+        item { OutlinedTextField(tags, { tags = it }, Modifier.fillMaxWidth(), label = { Text("Comma-separated tags") }, singleLine = true) }
         if (theory) item {
-            OutlinedTextField(body, { body = it }, Modifier.fillMaxWidth(), label = { Text("Contenido") }, minLines = 10)
+            OutlinedTextField(body, { body = it }, Modifier.fillMaxWidth(), label = { Text("Content") }, minLines = 10)
         }
         if (!theory) item {
             TabSectionEditor(
@@ -86,7 +86,7 @@ fun ResourceEditorScreen(
                 },
                 enabled = title.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Guardar recurso") }
+            ) { Text("Save resource") }
         }
     }
 }

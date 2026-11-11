@@ -10,9 +10,9 @@ object SessionFileStore {
 
     fun writeAtomically(file: File, session: SessionDocument) {
         val parent = file.absoluteFile.parentFile
-            ?: throw IllegalArgumentException("La sesión debe tener un directorio destino")
+            ?: throw IllegalArgumentException("The session must have a destination directory")
         if (!parent.exists() && !parent.mkdirs()) {
-            throw IllegalStateException("No se pudo crear el directorio de sesiones")
+            throw IllegalStateException("The session directory could not be created")
         }
         val temporary = File.createTempFile(".${file.name}.", ".tmp", parent)
 

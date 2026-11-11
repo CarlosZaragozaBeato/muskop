@@ -6,17 +6,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -63,26 +65,26 @@ fun HomeScreen(session: SessionDocument, padding: PaddingValues, onStartPractice
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Hola, ${session.username}", style = MaterialTheme.typography.headlineMedium)
+                Text("Hello, ${session.username}", style = MaterialTheme.typography.headlineMedium)
                 Text(todayLabel(), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                SummaryCard("Hoy", summary.todayMinutes, Icons.Rounded.Timer, Modifier.weight(1f))
-                SummaryCard("Esta semana", summary.weekMinutes, Icons.Rounded.CalendarToday, Modifier.weight(1f))
+                SummaryCard("Today", summary.todayMinutes, Icons.Rounded.Timer, Modifier.weight(1f))
+                SummaryCard("This week", summary.weekMinutes, Icons.Rounded.CalendarToday, Modifier.weight(1f))
             }
         }
         if (goals.weekly > 0) {
             item { WeeklyGoal(summary.weekMinutes, goals.weekly) }
         }
-        item { Text("Empieza a practicar", style = MaterialTheme.typography.titleLarge) }
+        item { Text("Start practicing", style = MaterialTheme.typography.titleLarge) }
         item {
             PracticeActionCard(
-                title = "Práctica libre",
-                subtitle = "Toca a tu ritmo y registra el tiempo",
+                title = "Free practice",
+                subtitle = "Play at your own pace and track your time",
                 icon = Icons.Rounded.Bolt,
-                button = "Empezar",
+                button = "Start",
                 onClick = { onStartPractice(FREE_PRACTICE) },
             )
         }
@@ -90,9 +92,9 @@ fun HomeScreen(session: SessionDocument, padding: PaddingValues, onStartPractice
             item {
                 PracticeActionCard(
                     title = routine.name,
-                    subtitle = "Última rutina · ${routine.totalMinutes()} min",
-                    icon = Icons.Rounded.QueueMusic,
-                    button = "Repetir",
+                    subtitle = "Last routine · ${routine.totalMinutes()} min",
+                    icon = Icons.AutoMirrored.Rounded.QueueMusic,
+                    button = "Repeat",
                     onClick = { onStartPractice(routine.id) },
                 )
             }
@@ -102,9 +104,9 @@ fun HomeScreen(session: SessionDocument, padding: PaddingValues, onStartPractice
             item {
                 PracticeActionCard(
                     title = firstRoutine.name,
-                    subtitle = "Rutina recomendada · ${firstRoutine.totalMinutes()} min",
-                    icon = Icons.Rounded.QueueMusic,
-                    button = "Practicar",
+                    subtitle = "Suggested routine · ${firstRoutine.totalMinutes()} min",
+                    icon = Icons.AutoMirrored.Rounded.QueueMusic,
+                    button = "Practice",
                     onClick = { onStartPractice(firstRoutine.id) },
                 )
             }
@@ -132,7 +134,7 @@ private fun WeeklyGoal(current: Int, target: Int) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Objetivo semanal", fontWeight = FontWeight.SemiBold)
+                Text("Weekly goal", fontWeight = FontWeight.SemiBold)
                 Text("$current / $target min", color = MaterialTheme.colorScheme.primary)
             }
             Box(
@@ -176,6 +178,7 @@ private fun PracticeActionCard(
             }
             Button(onClick = onClick, contentPadding = PaddingValues(horizontal = 14.dp)) {
                 Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+                Spacer(Modifier.width(4.dp))
                 Text(button)
             }
         }
@@ -198,8 +201,8 @@ private data class HomeSummary(val todayMinutes: Int, val weekMinutes: Int) {
     }
 }
 
-private fun todayLabel(): String = SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "ES"))
+private fun todayLabel(): String = SimpleDateFormat("EEEE, MMMM d", Locale.US)
     .format(Calendar.getInstance().time)
-    .replaceFirstChar { it.titlecase(Locale("es", "ES")) }
+    .replaceFirstChar { it.titlecase(Locale.US) }
 
 private fun dateKey(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(calendar.time)

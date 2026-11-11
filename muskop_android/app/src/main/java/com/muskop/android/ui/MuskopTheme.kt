@@ -15,48 +15,51 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFFB96B09),
-    onPrimary = Color(0xFFFFFFFF),
-    secondary = Color(0xFFC95E37),
-    background = Color(0xFFF5F1E8),
-    surface = Color(0xFFFFFBF5),
-    onBackground = Color(0xFF1F2430),
-    onSurface = Color(0xFF1F2430),
-    primaryContainer = Color(0xFFFFDDB1),
-    onPrimaryContainer = Color(0xFF2A1800),
-    secondaryContainer = Color(0xFFFFDBD0),
-    onSecondaryContainer = Color(0xFF3A0B00),
-    surfaceVariant = Color(0xFFECE1D2),
-    onSurfaceVariant = Color(0xFF4D463D),
+    primary = Color(0xFFF2A33C),
+    onPrimary = Color(0xFF111111),
+    secondary = Color(0xFF111111),
+    onSecondary = Color(0xFFFFFFFF),
+    background = Color(0xFFFFFFFF),
+    surface = Color(0xFFFFFFFF),
+    onBackground = Color(0xFF111111),
+    onSurface = Color(0xFF111111),
+    primaryContainer = Color(0xFFF2A33C),
+    onPrimaryContainer = Color(0xFF111111),
+    secondaryContainer = Color(0xFF111111),
+    onSecondaryContainer = Color(0xFFFFFFFF),
+    surfaceVariant = Color(0xFFF2F2F2),
+    onSurfaceVariant = Color(0xFF333333),
 )
 
 private val DarkColors = darkColorScheme(
     primary = Color(0xFFF2A33C),
-    secondary = Color(0xFFE8875B),
-    background = Color(0xFF1F2430),
-    surface = Color(0xFF2A3140),
-    onBackground = Color(0xFFF3EEE6),
-    onSurface = Color(0xFFF3EEE6),
-    primaryContainer = Color(0xFF5B3700),
-    onPrimaryContainer = Color(0xFFFFDDB1),
-    secondaryContainer = Color(0xFF5D1F0D),
-    onSecondaryContainer = Color(0xFFFFDBD0),
-    surfaceVariant = Color(0xFF46403A),
-    onSurfaceVariant = Color(0xFFD0C5B9),
+    onPrimary = Color(0xFF111111),
+    secondary = Color(0xFFFFFFFF),
+    onSecondary = Color(0xFF111111),
+    background = Color(0xFF111111),
+    surface = Color(0xFF111111),
+    onBackground = Color(0xFFFFFFFF),
+    onSurface = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFF2A33C),
+    onPrimaryContainer = Color(0xFF111111),
+    secondaryContainer = Color(0xFFFFFFFF),
+    onSecondaryContainer = Color(0xFF111111),
+    surfaceVariant = Color(0xFF252525),
+    onSurfaceVariant = Color(0xFFE5E5E5),
 )
 
 private val MuskopTypography = Typography(
     headlineMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
+        fontSize = 26.sp,
+        lineHeight = 32.sp,
     ),
     headlineSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 23.sp,
-        lineHeight = 29.sp,
+        fontSize = 21.sp,
+        lineHeight = 27.sp,
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
@@ -74,6 +77,12 @@ private val MuskopTypography = Typography(
     bodyMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 21.sp),
     bodySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 12.sp, lineHeight = 18.sp),
     labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
+    displayMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 38.sp,
+        lineHeight = 44.sp,
+    ),
 )
 
 private val MuskopShapes = Shapes(

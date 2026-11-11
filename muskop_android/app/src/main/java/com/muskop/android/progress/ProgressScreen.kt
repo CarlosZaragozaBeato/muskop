@@ -42,12 +42,12 @@ fun ProgressScreen(session: SessionDocument, padding: PaddingValues) {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { Text("Progreso", style = MaterialTheme.typography.headlineMedium) }
+        item { Text("Progress", style = MaterialTheme.typography.headlineMedium) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MetricCard("Total", "${snapshot.totalMinutes} min", Modifier.weight(1f))
-                MetricCard("Semana", "${snapshot.weekMinutes} min", Modifier.weight(1f))
-                MetricCard("Racha", "${snapshot.streak} días", Modifier.weight(1f))
+                MetricCard("Week", "${snapshot.weekMinutes} min", Modifier.weight(1f))
+                MetricCard("Streak", "${snapshot.streak} days", Modifier.weight(1f))
             }
         }
         item { GoalsCard(snapshot.goals, snapshot.weekMinutes, snapshot.monthMinutes, snapshot.yearMinutes) }
@@ -55,28 +55,28 @@ fun ProgressScreen(session: SessionDocument, padding: PaddingValues) {
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Siguiente foco", style = MaterialTheme.typography.titleLarge)
-                        Text("Refuerza ${skillLabel(skill)}: llevas $minutes min registrados.")
+                        Text("Next focus", style = MaterialTheme.typography.titleLarge)
+                        Text("Work on ${skillLabel(skill)}: you have logged $minutes min.")
                     }
                 }
             }
         }
-        item { Text("Por habilidad", style = MaterialTheme.typography.titleLarge) }
+        item { Text("By skill", style = MaterialTheme.typography.titleLarge) }
         if (snapshot.skillMinutes.isEmpty()) {
-            item { Text("Aún no hay minutos de práctica para analizar.") }
+            item { Text("There is no practice time to analyze yet.") }
         }
         items(snapshot.skillMinutes.toList(), key = { it.first }) { (skill, minutes) ->
             Card(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text(skillLabel(skill), fontWeight = FontWeight.SemiBold)
-                        snapshot.skillGoals[skill]?.let { goal -> Text("Objetivo: $minutes / $goal min") }
+                        snapshot.skillGoals[skill]?.let { goal -> Text("Goal: $minutes / $goal min") }
                     }
                     Text("$minutes min")
                 }
             }
         }
-        item { Text("Últimos días", style = MaterialTheme.typography.titleLarge) }
+        item { Text("Recent days", style = MaterialTheme.typography.titleLarge) }
         items(snapshot.lastDays, key = { it.date }) { day ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(day.date)
@@ -100,17 +100,17 @@ private fun MetricCard(label: String, value: String, modifier: Modifier) {
 private fun GoalsCard(goals: PracticeGoals, week: Int, month: Int, year: Int) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Objetivos", style = MaterialTheme.typography.titleLarge)
-            GoalLine("Semana", week, goals.weekly)
-            GoalLine("Mes", month, goals.monthly)
-            GoalLine("Año", year, goals.yearly)
+            Text("Goals", style = MaterialTheme.typography.titleLarge)
+            GoalLine("Week", week, goals.weekly)
+            GoalLine("Month", month, goals.monthly)
+            GoalLine("Year", year, goals.yearly)
         }
     }
 }
 
 @Composable
 private fun GoalLine(label: String, current: Int, target: Int) {
-    val text = if (target > 0) "$current / $target min" else "$current min · sin objetivo"
+    val text = if (target > 0) "$current / $target min" else "$current min · no goal"
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label)
         Text(text)
@@ -229,11 +229,11 @@ private fun weekStart(calendar: Calendar): String {
 private fun dateKey(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(calendar.time)
 
 private fun skillLabel(skill: String): String = when (skill) {
-    "arpegios" -> "Arpegios"
-    "cambios-acordes" -> "Cambios de acordes"
-    "patrones" -> "Patrones"
-    "velocidad" -> "Velocidad"
-    "tecnica" -> "Técnica"
-    "repertorio" -> "Repertorio"
-    else -> "Práctica general"
+    "arpegios" -> "Arpeggios"
+    "cambios-acordes" -> "Chord changes"
+    "patrones" -> "Patterns"
+    "velocidad" -> "Speed"
+    "tecnica" -> "Technique"
+    "repertorio" -> "Repertoire"
+    else -> "General practice"
 }

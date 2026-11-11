@@ -78,5 +78,5 @@ internal val KNOWN_TOP_LEVEL_KEYS = setOf(
 internal fun JsonObject.arraySize(key: String): Int = (this[key] as? JsonArray)?.size ?: 0
 
 internal fun JsonElement.jsonObjectValue(): JsonObject = this as? JsonObject
-    ?: throw SessionFormatException("El campo de sesión debe ser un objeto JSON")
+    ?: throw SessionFormatException("The session field must be a JSON object")
 
