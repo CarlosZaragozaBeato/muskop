@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -53,8 +54,25 @@ fun RoutineEditorScreen(
     resources: List<SessionResource>,
     padding: PaddingValues,
     onSave: (RoutineEditorInput) -> Unit,
+    onDelete: (String) -> Unit,
     onBack: () -> Unit,
 ) {
+    var confirmDelete by rememberSaveable(routine?.id) { mutableStateOf(false) }
+    if (confirmDelete && routine != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete routine?") },
+            text = { Text("This removes the routine and any unfinished practice. Your saved practice history stays intact.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    onDelete(routine.id)
+                    onBack()
+                }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+        )
+    }
     var name by remember(routine) { mutableStateOf(routine?.name.orEmpty()) }
     var description by remember(routine) { mutableStateOf(routine?.description.orEmpty()) }
     var category by remember(routine) { mutableStateOf(routine?.category.orEmpty()) }
@@ -176,6 +194,15 @@ fun RoutineEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Save routine") }
         }
+        if (routine != null) {
+            item {
+                TextButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Rounded.DeleteOutline, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Delete routine")
+                }
+            }
+        }
     }
 }
 
@@ -254,7 +281,11 @@ private fun BlockEditor(
                 SettingLabel("Metronome")
                 BpmChips(block.bpm) { onChange(block.copy(bpm = it)) }
                 SettingLabel("Practice resource")
-                ResourceChips(resources, block.resourceId) { onChange(block.copy(resourceId = it)) }
+                PracticeResourceChooser(resources, resources.firstOrNull { it.id == block.resourceId }) { onChange(block.copy(resourceId = it?.id)) }
+                if (block.resourceId != null && resources.none { it.id == block.resourceId }) {
+                    Text("Linked resource unavailable", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = { onChange(block.copy(resourceId = null)) }) { Text("Remove unavailable link") }
+                }
                 OutlinedTextField(
                     value = block.notes.orEmpty(),
                     onValueChange = { onChange(block.copy(notes = it.ifBlank { null })) },
@@ -295,20 +326,6 @@ private fun BpmChips(selected: Int?, onSelect: (Int?) -> Unit) {
         FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text("Free tempo") })
         options.forEach { bpm ->
             FilterChip(selected = selected == bpm, onClick = { onSelect(bpm) }, label = { Text("$bpm BPM") })
-        }
-    }
-}
-
-@Composable
-private fun ResourceChips(resources: List<SessionResource>, selected: String?, onSelect: (String?) -> Unit) {
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text("None") })
-        resources.forEach { resource ->
-            FilterChip(
-                selected = selected == resource.id,
-                onClick = { onSelect(resource.id) },
-                label = { Text(resource.title) },
-            )
         }
     }
 }

@@ -32,7 +32,11 @@ data class PracticeEntryInput(
     val minutes: Int,
     val completed: Boolean,
     val skillMinutes: Map<String, Int>,
-)
+    val seconds: Int? = null,
+    val id: String? = null,
+    val resourceSeconds: Map<String, Int> = emptyMap(),
+    val resourceLastPracticedAt: Map<String, String> = emptyMap(),
+) : java.io.Serializable
 
 fun SessionDocument.routines(): List<PracticeRoutine> = (root["routines"] as? JsonArray)
     .orEmpty()
@@ -66,16 +70,24 @@ fun SessionDocument.recordPractice(entry: PracticeEntryInput): SessionDocument {
     require(entry.date.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) { "Date must use the YYYY-MM-DD format" }
     require(entry.routineId.isNotBlank()) { "routineId is required" }
     require(entry.minutes > 0) { "Practice minutes must be positive" }
+    require(entry.seconds == null || entry.seconds > 0) { "Practice seconds must be positive" }
     require(entry.skillMinutes.values.all { it >= 0 }) { "Skill minutes cannot be negative" }
+    require(entry.id == null || entry.id.isNotBlank()) { "Practice id cannot be blank" }
+    validateResourcePractice(entry.resourceSeconds, entry.resourceLastPracticedAt, entry.seconds ?: entry.minutes * 60)
 
     val practiceLog = root["practiceLog"] as? JsonArray
         ?: throw SessionFormatException("The practiceLog field must be a JSON array")
     val normalizedSkills = entry.skillMinutes.filterValues { it > 0 }
+    if (entry.id != null && practiceLog.any { (it as? JsonObject)?.stringValue("id") == entry.id }) return this
     val newEntry = buildMap<String, kotlinx.serialization.json.JsonElement> {
         put("date", JsonPrimitive(entry.date))
+        entry.id?.let { put("id", JsonPrimitive(it)) }
         put("routineId", JsonPrimitive(entry.routineId))
         entry.routineName?.takeIf(String::isNotBlank)?.let { put("routineName", JsonPrimitive(it)) }
         put("minutes", JsonPrimitive(entry.minutes))
+        entry.seconds?.let { put("seconds", JsonPrimitive(it)) }
+        put("resourceSeconds", JsonObject(entry.resourceSeconds.filterValues { it > 0 }.mapValues { JsonPrimitive(it.value) }))
+        put("resourceLastPracticedAt", JsonObject(entry.resourceLastPracticedAt.mapValues { JsonPrimitive(it.value) }))
         put("completed", JsonPrimitive(entry.completed))
         put(
             "skillMinutes",
@@ -85,7 +97,10 @@ fun SessionDocument.recordPractice(entry: PracticeEntryInput): SessionDocument {
     return withRootValues(
         mapOf(
             "practiceLog" to JsonArray(practiceLog + JsonObject(newEntry)),
-            "activePractice" to JsonNull,
+            "activePractice" to if (entry.id == null || (root["activePractice"] as? JsonObject)?.stringValue("practiceId") == entry.id ||
+                ((root["activePractice"] as? JsonObject)?.stringValue("practiceId") == null &&
+                    (root["activePractice"] as? JsonObject)?.stringValue("routineId") == entry.routineId))
+                JsonNull else (root["activePractice"] ?: JsonNull),
         ),
     )
 }

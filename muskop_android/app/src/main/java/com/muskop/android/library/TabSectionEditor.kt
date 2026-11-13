@@ -45,6 +45,7 @@ fun TabSectionEditor(
                 TextButton(onClick = { selectedFinger = finger }) { Text(if (selectedFinger == finger) "[$label]" else label) }
             }
         }
+        Text("Tap an empty cell to add a note; tap a different fret to change it, or the same fret to remove it.")
         sections.forEachIndexed { index, section ->
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 OutlinedTextField(section.name, { value -> onChange(sections.updated(index, section.copy(name = value))) }, Modifier.fillMaxWidth(), label = { Text("Name") })
@@ -64,7 +65,7 @@ fun TabSectionEditor(
                         val measure = element as? JsonObject ?: return@forEachIndexed
                         Text("Measure ${measureIndex + 1}")
                         TabMeasureGrid(measure) { beat, string, currentFret ->
-                            val note = if (currentFret == null) TabNoteInput(string, selectedFret, selectedFinger) else null
+                            val note = if (currentFret == selectedFret) null else TabNoteInput(string, selectedFret, selectedFinger)
                             onMeasureChange(sectionId, measureIndex, updateMeasureNote(measure, beat, string, note?.fret, note?.finger))
                         }
                     }

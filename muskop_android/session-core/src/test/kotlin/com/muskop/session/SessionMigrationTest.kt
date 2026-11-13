@@ -89,6 +89,7 @@ class SessionMigrationTest {
                 minutes = 12,
                 completed = false,
                 skillMinutes = mapOf("cambios-acordes" to 12),
+                seconds = 721,
             ),
         )
 
@@ -96,7 +97,27 @@ class SessionMigrationTest {
         assertEquals(session.routines(), updated.routines())
         val entry = updated.toJsonObject().getValue("practiceLog").jsonArray.last().jsonObject
         assertEquals("Free practice", entry.getValue("routineName").jsonPrimitive.content)
+        assertEquals(721, entry.getValue("seconds").jsonPrimitive.int)
         assertEquals(12, entry.getValue("skillMinutes").jsonObject.getValue("cambios-acordes").jsonPrimitive.int)
+    }
+
+    @Test
+    fun `daily totals aggregate exact seconds before converting to minutes`() {
+        val session = SessionImporter.fromJson(fixture("session-v1-current.json"))
+        val updated = session.recordPractice(
+            PracticeEntryInput(
+                date = "2026-11-11",
+                routineId = "routine-1",
+                routineName = "Royal Road",
+                minutes = 10,
+                completed = true,
+                skillMinutes = mapOf("cambios-acordes" to 10),
+                seconds = 601,
+            ),
+        )
+
+        assertEquals(20, updated.practiceEntries().totalWholeMinutes())
+        assertEquals(601, updated.practiceEntries().last().seconds)
     }
 
     @Test
@@ -154,6 +175,39 @@ class SessionMigrationTest {
     }
 
     @Test
+    fun `deleting a routine preserves history and unrelated session fields`() {
+        val session = SessionImporter.fromJson(fixture("session-v1-current.json"))
+            .saveActivePractice(ActivePracticeSnapshot(
+                kind = "routine", routineId = "routine-1", routineName = "Royal Road",
+                skill = null, blockIndex = 0, secondsLeft = 120,
+                elapsedBySkillSeconds = mapOf("general" to 480),
+            ))
+
+        val updated = session.deleteRoutine("routine-1")
+
+        assertEquals(emptyList(), updated.routines())
+        assertEquals(session.practiceEntries(), updated.practiceEntries())
+        assertEquals(session.resources(), updated.resources())
+        assertEquals(null, updated.activePractice())
+        assertEquals(session.toJsonObject()["projects"], updated.toJsonObject()["projects"])
+    }
+
+    @Test
+    fun `editing practice goals preserves the history and other session data`() {
+        val session = SessionImporter.fromJson(fixture("session-v1-current.json"))
+
+        val updated = session.savePracticeGoals(PracticeGoals(120, 600, 7200))
+
+        assertEquals(PracticeGoals(120, 600, 7200), updated.practiceGoals())
+        assertEquals(session.practiceEntries(), updated.practiceEntries())
+        assertEquals(session.toJsonObject()["goalsClaimed"], updated.toJsonObject()["goalsClaimed"])
+        assertEquals(session.toJsonObject()["skillGoals"], updated.toJsonObject()["skillGoals"])
+        assertFailsWith<IllegalArgumentException> {
+            session.savePracticeGoals(PracticeGoals(-1, 600, 7200))
+        }
+    }
+
+    @Test
     fun `resource metadata edits keep tab content intact`() {
         val session = SessionImporter.fromJson(fixture("session-v1-current.json"))
         val originalContent = session.resources().single().content
@@ -164,6 +218,25 @@ class SessionMigrationTest {
 
         assertEquals(originalContent, updated.content)
         assertEquals(listOf("repaso"), updated.tags)
+    }
+
+    @Test
+    fun `deleting resource archives its full document and unlinks routine blocks`() {
+        val session = SessionImporter.fromJson(fixture("session-v1-current.json"))
+        val original = session.toJsonObject().getValue("resources").jsonArray.single()
+        val previousTrash = session.toJsonObject().getValue("trash").jsonArray
+
+        val updated = session.deleteResource("resource-1")
+
+        assertEquals(emptyList(), updated.resources())
+        val trash = updated.toJsonObject().getValue("trash").jsonArray
+        assertEquals(previousTrash.size + 1, trash.size)
+        assertEquals(original, trash.last().jsonObject.getValue("resource"))
+        assertEquals(previousTrash, kotlinx.serialization.json.JsonArray(trash.dropLast(1)))
+        assertEquals(null, updated.routines().single().blocks.single().resourceId)
+        assertEquals(session.practiceEntries(), updated.practiceEntries())
+        assertEquals(session.toJsonObject()["projects"], updated.toJsonObject()["projects"])
+        assertFailsWith<IllegalArgumentException> { updated.deleteResource("resource-1") }
     }
 
     @Test

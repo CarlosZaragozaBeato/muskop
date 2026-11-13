@@ -1,0 +1,49 @@
+{
+  "muskopResources": 1,
+  "resources": [
+    {
+      "title": "PIMA warm-up on Am",
+      "type": "TAB",
+      "tags": ["warmup"],
+      "content": {
+        "version": 2,
+        "title": "PIMA warm-up on Am",
+        "tuning": ["E", "A", "D", "G", "B", "E"],
+        "timeSignature": "4/4",
+        "baseBpm": 60,
+        "musical": {
+          "version": 1,
+          "role": "exercise",
+          "difficulty": {"level": 1, "reasons": ["Four quarter notes on an open chord"]},
+          "concepts": [{"id": "pattern:p-i-m-a", "label": "PIMA", "relation": "trains", "sectionIds": ["pattern"]}]
+        },
+        "sections": [{
+          "id": "pattern",
+          "kind": "fingerstyle",
+          "name": "PIMA on Am",
+          "notes": "Hold Am and play slowly: thumb, index, middle, ring. Repeat without interrupting the pulse.",
+          "measures": [{"events": [
+            {"beat": 1, "duration": "quarter", "notes": [{"string": 5, "fret": 0, "finger": "p"}]},
+            {"beat": 2, "duration": "quarter", "notes": [{"string": 3, "fret": 2, "finger": "i"}]},
+            {"beat": 3, "duration": "quarter", "notes": [{"string": 2, "fret": 1, "finger": "m"}]},
+            {"beat": 4, "duration": "quarter", "notes": [{"string": 1, "fret": 0, "finger": "a"}]}
+          ]}]
+        }]
+      }
+    },
+    {
+      "title": "What PIMA means",
+      "type": "THEORY",
+      "tags": ["theory"],
+      "content": {
+        "kind": "theory",
+        "body": "PIMA names the right-hand fingers: p = thumb, i = index, m = middle, a = ring. The letter next to a note tells you which finger plucks its string.",
+        "musical": {
+          "version": 1,
+          "role": "theory",
+          "concepts": [{"id": "pattern:p-i-m-a", "label": "PIMA", "relation": "explains"}]
+        }
+      }
+    }
+  ]
+}

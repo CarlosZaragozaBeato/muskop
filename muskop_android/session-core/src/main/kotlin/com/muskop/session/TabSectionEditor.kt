@@ -9,6 +9,23 @@ import kotlinx.serialization.json.JsonElement
 
 data class TabSectionInput(val id: String?, val kind: String, val name: String, val bpm: Int?, val notes: String?)
 
+/** Assign stable editor identities without rebuilding section content. */
+fun ensureTabSectionIds(content: JsonElement): JsonElement {
+    val document = content as? JsonObject ?: return content
+    val sections = document["sections"] as? JsonArray ?: return content
+    val used = mutableSetOf<String>()
+    val updated = sections.map { item ->
+        val section = item as? JsonObject ?: return@map item
+        val id = section.stringValue("id")
+        if (id != null && used.add(id)) section else {
+            val newId = UUID.randomUUID().toString()
+            used.add(newId)
+            JsonObject(section.toMutableMap().apply { this["id"] = JsonPrimitive(newId) })
+        }
+    }
+    return JsonObject(document.toMutableMap().apply { this["sections"] = JsonArray(updated) })
+}
+
 fun updateTabSectionMeasures(content: JsonElement, sectionId: String, measureIndex: Int, measure: JsonObject): JsonElement {
     val document = content as? JsonObject ?: return content
     val sections = document["sections"] as? JsonArray ?: return content

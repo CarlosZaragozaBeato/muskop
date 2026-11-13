@@ -15,6 +15,8 @@ data class SessionResource(
     val tags: List<String>,
     val content: JsonElement,
     val exercise: JsonObject?,
+    val learning: JsonElement? = null,
+    val organization: JsonElement? = null,
 )
 
 data class TabSection(
@@ -42,6 +44,8 @@ fun SessionDocument.resources(): List<SessionResource> = (root["resources"] as? 
             tags = resource.stringList("tags"),
             content = resource["content"] ?: JsonObject(emptyMap()),
             exercise = resource["exercise"] as? JsonObject,
+            learning = resource["learning"],
+            organization = resource["organization"],
         )
     }
 

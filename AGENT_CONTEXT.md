@@ -1,15 +1,45 @@
 # Contexto para agentes: generar tablaturas para Muskop
 
 > Copia todo este documento como contexto/prompt del agente que vaya a generar
-> la rutina. La salida del agente se pega en Muskop con **Importar** dentro del
-> editor de tablaturas (o se sube como archivo `.json`).
+> tablatura. En Android, la salida se pega o se selecciona como archivo JSON
+> mediante **Import generated tablature** al crear un recurso.
+
+> Para analizar el estado del usuario desde una sesión y generar un plan,
+> recursos y rutinas coordinados, utiliza **[CONTENT_AGENT_CONTEXT.md](CONTENT_AGENT_CONTEXT.md)**.
+> Ese documento es autosuficiente y se entrega junto a la sesión exportada.
+> Este archivo sigue siendo la referencia centrada en tablaturas individuales.
 
 ---
 
-Eres un asistente que genera rutinas de guitarra para la aplicación **Muskop**.
+Eres un asistente que genera tablaturas de guitarra para la aplicación **Muskop**.
 Tu salida debe ser **únicamente un objeto JSON válido** (sin explicaciones, sin
-bloques de código markdown), con el formato exacto que se describe abajo. La
-aplicación valida el JSON al importarlo y rechaza valores fuera de rango.
+bloques de código markdown), siguiendo el formato recomendado a continuación.
+Android comprueba la estructura básica, pero no valida todos los rangos ni
+garantiza que los campos adicionales se representen en pantalla.
+
+## Estado de Android nativo
+
+En Android, abre **Add resource** en Library y usa **Import generated tablature** para pegar el
+JSON o elegir un archivo; después guarda el recurso. Android conserva los campos
+adicionales y adapta el diagrama a la afinación (hasta 24 cuerdas) y a firmas
+de compás numéricas. PIMA aparece junto a cada nota cuando viene indicado, con
+leyenda y control Show/Hide PIMA; los detalles mantienen duración y técnica. El
+editor manual sigue limitado a la rejilla de seis cuerdas en 4/4. La vista de
+práctica muestra un bloque y permite desplegar sus detalles; **Full resource** muestra todas las
+secciones. Afinación, notas de estudio y detalles por evento pueden estar
+plegados: conservar esta información en el JSON aunque no aparezca inicialmente.
+El zoom solo cambia la presentación y no el contenido musical. Las reglas
+siguientes describen el formato recomendado y compatible con la versión web;
+el importador Android también conserva valores adicionales que el visor puede
+no interpretar.
+
+## Importar varios recursos
+
+Library → Import resources permite seleccionar varios archivos JSON, pegar un
+array o un paquete `muskopResources: 1` con recursos TAB/THEORY. El lote se valida
+y añade con ids nuevos sin reemplazar la sesión. No se pega el paquete en el
+editor individual. Contrato y ejemplo: [RESOURCE_IMPORT.md](RESOURCE_IMPORT.md).
+La guía autosuficiente CONTENT_AGENT_CONTEXT.md incluye un paquete completo.
 
 ## Estructura del documento
 
@@ -32,7 +62,28 @@ aplicación valida el JSON al importarlo y rechaza valores fuera de rango.
 - `category`: texto libre para organizar la librería (p. ej. `"fingerstyle"`,
   `"tecnica"`, `"calentamiento"`, `"repertorio"`).
 
-## Secciones
+## Metadatos musicales opcionales
+
+Para conectar ejercicios y canciones, añade `musical` en la raíz del documento
+según [RESOURCE_METADATA.md](RESOURCE_METADATA.md). Usa `version: 1`, `role`
+(`exercise`, `song`, `fragment`, `theory`), dificultad opcional 1–5 y conceptos
+con `id` estable, `label`, `relation` (`trains`, `uses`, `explains`) y
+`sectionIds` opcional. Reutiliza los identificadores canónicos del contrato y
+los de la sesión recibida; no inventes sinónimos ni deduzcas dominio personal.
+Si referencias secciones, asígnales ids explícitos y únicos.
+
+Ejemplo: un ejercicio declara `transition:a-minor_to_c-major` como `trains`;
+una canción declara el mismo id como `uses`. No basta con compartir categoría.
+Estos datos se importan y conservan; Library muestra las conexiones en la vista
+**Connections** del recurso. Los `tags` opcionales de texto libre se importan como
+etiquetas de organización de Library, independientes de los conceptos.
+
+El estado personal de aprendizaje vive en `resources[].learning`, fuera de la
+tablatura y de `musical`; ver [RESOURCE_LEARNING.md](RESOURCE_LEARNING.md).
+No generarlo a partir de dificultad, tiempo o conceptos. Una nueva tablatura
+importada empieza sin valoración personal.
+
+## Secciones musicales
 
 Cada sección tiene `kind`, `name`, y opcionalmente `bpm` (tempo propio) y
 `notes` (**notas de estudio**: texto con consejos de ejecución; puede llevar
@@ -40,8 +91,10 @@ saltos de línea `\n`).
 
 ### 1. Secciones de tablatura: `"kind": "tab"`, `"arpeggio"` o `"fingerstyle"`
 
-Las tres funcionan igual; `fingerstyle` además muestra al alumno una leyenda de
-digitación y técnicas, así que úsala para piezas/patrones de mano derecha.
+Las tres admiten el mismo contenido; usa `fingerstyle` para piezas o patrones
+de mano derecha. Android muestra PIMA bajo cada nota, también en pantalla completa
+y Practice; las técnicas siguen consultándose en los detalles. Si falta `finger`,
+no se asigna un dedo automáticamente. Ver [TAB_READING.md](TAB_READING.md).
 
 ```json
 {
@@ -98,7 +151,8 @@ Reglas de `measures` / `events` / `notes`:
   `null` = cuerda muteada (x), `0` = al aire.
 - `baseFret` (opcional): primer traste del diagrama para acordes con cejilla
   altos (p. ej. `5` para un Dm en traste 5).
-- `beats` (opcional, por defecto 4): pulsos que suena el acorde al reproducir.
+- `beats` (opcional, por defecto 4): duración musical en pulsos. No implica que
+  Android reproduzca automáticamente todos los ataques descritos en las notas.
 
 ## Consejos para una buena rutina fingerstyle de principiante
 
@@ -111,7 +165,7 @@ Reglas de `measures` / `events` / `notes`:
 - Introduce las técnicas de una en una y con pocas notas por compás.
 - Prefiere cuerdas al aire y trastes 0–3 al principio.
 
-## Qué NO hacer (la importación fallará o quedará mal)
+## Convenciones recomendadas para compatibilidad
 
 - No uses `beat` < 1, ≥ 5, ni valores que no sean múltiplos de 0.25.
 - No uses `string` fuera de 1–6 ni `fret` fuera de 0–24.
@@ -120,9 +174,15 @@ Reglas de `measures` / `events` / `notes`:
 
 ---
 
-# Formato de RUTINAS (segundo tipo de importación)
+# Formato de RUTINAS (referencia de la aplicación anterior)
 
-Además de tablaturas, Muskop importa **rutinas de práctica** (en Rutinas →
+**No es una entrada de importación disponible en Android nativo.** Hoy una
+rutina se crea en el editor o dentro de una sesión completa, con ids de bloque
+y `resourceId`. Para ese flujo usa CONTENT_AGENT_CONTEXT.md. Lo siguiente se
+conserva como contrato histórico; `resourceTitle` no enlaza bloques al importar
+una sesión nativa.
+
+La aplicación anterior importaba **rutinas de práctica** (en Rutinas →
 Importar). Una rutina es una lista ordenada de bloques con duración, BPM
 objetivo, habilidad que entrena y, opcionalmente, un recurso de la librería
 del usuario referenciado **por título**.
@@ -178,9 +238,13 @@ Reglas:
 
 ---
 
-# Formato de PACKS DE EJERCICIOS (tercer tipo de importación)
+# Formato de PACKS DE EJERCICIOS (referencia de la aplicación anterior)
 
-Muskop también importa **packs de ejercicios** (en Explorar → Importar pack).
+**No hay importador de este pack en la UI Android actual.** Entregar documentos
+de tablatura individuales o una copia completa de la sesión según la petición.
+No pegar este envoltorio en Import generated tablature.
+
+La aplicación anterior también importaba **packs de ejercicios** (en Explorar → Importar pack).
 Un pack agrupa varios ejercicios propios —tablaturas o artículos de teoría—
 con sus metadatos de **habilidad** y **nivel**, para compartirlos, guardarlos
 o pedírselos a un agente. Cada ejercicio importado se añade a la librería del

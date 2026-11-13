@@ -38,10 +38,17 @@ class MainActivity : ComponentActivity() {
                     onExportSession = { exportLauncher.launch("Muskop.muskop.json") },
                     onRetry = sessionViewModel::refresh,
                     onRecordPractice = sessionViewModel::recordPractice,
+                    onReviewResourceLearning = sessionViewModel::reviewResourceLearning,
                     onSaveActivePractice = sessionViewModel::saveActivePractice,
                     onClearActivePractice = sessionViewModel::clearActivePractice,
                     onSaveRoutine = sessionViewModel::saveRoutine,
+                    onDeleteRoutine = sessionViewModel::deleteRoutine,
+                    onSavePracticeGoals = sessionViewModel::savePracticeGoals,
                     onSaveResource = sessionViewModel::saveResource,
+                    onImportResources = sessionViewModel::importResources,
+                    onDeleteResource = sessionViewModel::deleteResource,
+                    onUpdateResourceLearning = sessionViewModel::updateResourceLearning,
+                    onUpdateResourceOrganization = sessionViewModel::updateResourceOrganization,
                 )
             }
         }

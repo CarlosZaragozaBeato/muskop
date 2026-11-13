@@ -54,6 +54,23 @@ fun SessionDocument.saveRoutine(input: RoutineEditorInput): SessionDocument {
     return withRootValue("routines", JsonArray(newRoutines))
 }
 
+fun SessionDocument.deleteRoutine(routineId: String): SessionDocument {
+    require(routineId.isNotBlank()) { "Routine id is required" }
+    val routines = root["routines"] as? JsonArray
+        ?: throw SessionFormatException("The routines field must be a JSON array")
+    require(routines.any { (it as? JsonObject)?.stringValue("id") == routineId }) {
+        "Routine not found"
+    }
+    val remaining = JsonArray(routines.filterNot { (it as? JsonObject)?.stringValue("id") == routineId })
+    val pending = activePractice()
+    return withRootValues(buildMap {
+        put("routines", remaining)
+        if (pending?.kind == "routine" && pending.routineId == routineId) {
+            put("activePractice", JsonNull)
+        }
+    })
+}
+
 private fun RoutineBlockInput.toJson(existing: JsonObject?): JsonObject = JsonObject(
     (existing?.toMutableMap() ?: mutableMapOf()).apply {
         this["id"] = JsonPrimitive(id ?: UUID.randomUUID().toString())

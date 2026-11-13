@@ -40,8 +40,40 @@ fun SessionDocument.saveResource(input: ResourceEditorInput): SessionDocument {
     return withRootValue("resources", JsonArray(next))
 }
 
-fun theoryContent(body: String): JsonObject = JsonObject(
-    mapOf("kind" to JsonPrimitive("theory"), "body" to JsonPrimitive(body)),
+fun SessionDocument.deleteResource(resourceId: String): SessionDocument {
+    require(resourceId.isNotBlank()) { "Resource id is required" }
+    val resources = root["resources"] as? JsonArray
+        ?: throw SessionFormatException("The resources field must be a JSON array")
+    val original = resources.filterIsInstance<JsonObject>().firstOrNull { it.stringValue("id") == resourceId }
+        ?: throw IllegalArgumentException("Resource not found")
+    val trash = root["trash"] as? JsonArray ?: JsonArray(emptyList())
+    val archived = JsonObject(mapOf(
+        "id" to JsonPrimitive(UUID.randomUUID().toString()),
+        "kind" to JsonPrimitive("resource"),
+        "resource" to original,
+    ))
+    val routines = root["routines"] as? JsonArray
+        ?: throw SessionFormatException("The routines field must be a JSON array")
+    val updatedRoutines = JsonArray(routines.map routineLoop@{ item ->
+        val routine = item as? JsonObject ?: return@routineLoop item
+        val blocks = routine["blocks"] as? JsonArray ?: return@routineLoop item
+        val updatedBlocks = JsonArray(blocks.map blockLoop@{ entry ->
+            val block = entry as? JsonObject ?: return@blockLoop entry
+            if (block.stringValue("resourceId") != resourceId) entry
+            else JsonObject(block.toMutableMap().apply { this["resourceId"] = JsonNull })
+        })
+        JsonObject(routine.toMutableMap().apply { this["blocks"] = updatedBlocks })
+    })
+    return withRootValues(mapOf(
+        "resources" to JsonArray(resources.filterNot { (it as? JsonObject)?.stringValue("id") == resourceId }),
+        "trash" to JsonArray(trash + archived),
+        "routines" to updatedRoutines,
+    ))
+}
+
+fun theoryContent(body: String, previous: JsonElement? = null): JsonObject = JsonObject(
+    ((previous as? JsonObject)?.toMap() ?: emptyMap()) +
+        mapOf("kind" to JsonPrimitive("theory"), "body" to JsonPrimitive(body)),
 )
 
 private fun String?.trimOrNull(): String? = this?.trim()?.takeIf(String::isNotEmpty)

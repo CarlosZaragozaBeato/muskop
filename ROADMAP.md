@@ -1,5 +1,81 @@
 # Muskop — Visión y hoja de ruta
 
+## Estado vigente — 2026-11-13
+
+La aplicación activa es **Android nativo (Kotlin + Compose)** en
+`muskop_android/`, local-first y sin backend. La sesión exportable
+`muskopSession: 2` sigue siendo la fuente de verdad. React/Capacitor queda como
+referencia histórica; las antiguas reglas de paridad y prioridades web de este
+documento no son instrucciones vigentes para nuevas implementaciones.
+
+Implementado: sesión local/importación/exportación, biblioteca y lectura de
+recursos, importación de tablaturas generadas, editor inicial, rutinas con
+preparación/práctica/reanudación, metrónomo, progreso y primera actualización
+visual. Hay cinco destinos; la navegación de cuatro sigue como propuesta.
+
+### Recursos relacionados
+
+- [x] Paso 1: contrato musical v1, ids de conceptos compartidos, función del
+      recurso, dificultad 1–5, validación e importación con conservación de JSON.
+- [x] Paso 2: Connections con preparación, aplicaciones, teoría y secciones,
+      apertura de recursos relacionados y recorrido de vuelta.
+- [x] Paso 3a: estado manual de aprendizaje por recurso, separado de dificultad
+      y tiempo. Implementado; pendiente de validación del propietario en dispositivo.
+      Incluye porcentaje de dominio manual opcional 0–100 %, independiente del estado.
+- [x] Paso 3b: segundos y última práctica por recurso en el log, práctica libre
+      con selección y lectura ocultable, checkpoints y guardado idempotente.
+      Implementado; pendiente de prueba del propietario en dispositivo.
+      No se deduce dominio ni se atribuye tiempo antiguo.
+- [x] Paso 4a: Study path del recurso objetivo, con explicación, preparación,
+      aplicación y conceptos sin ejercicios disponibles. Derivado de relaciones
+      directas, sin inferir prerrequisitos ni dominio. Pendiente de prueba en dispositivo.
+- [ ] Paso 4b: ayuda para preparar un borrador de rutina desde el recorrido,
+      con selección del usuario y duración revisable.
+
+El propietario ha instalado la app y ha confirmado que las conexiones funcionan
+con nuevos recursos que utilizan los metadatos musicales.
+La entrega de conexiones pasó 31 tests y compilación directa Kotlin/Compose;
+la build con wrapper quedó bloqueada por restricciones del entorno del agente.
+
+### Organización de recursos
+
+- [x] Resumen al finalizar práctica libre/guiada/parcial: tiempo real, estado del
+      día, recursos practicados y autoevaluación opcional de maestría/estado.
+      Guardado con resultado y reintento idempotente; pendiente prueba en
+      dispositivo. Ver [PRACTICE_REVIEW.md](PRACTICE_REVIEW.md).
+
+- [x] Active/Hidden/Completed para apartar material sin eliminarlo, filtros de
+      recuperación y prioridad High/Normal/Low en Library y selectores de
+      práctica libre/rutinas. Vínculos e historial conservados; pendiente prueba
+      en dispositivo. Contrato en RESOURCE_ORGANIZATION.md.
+
+### Lectura de tablaturas
+
+- [x] Primera entrega visual: PIMA indicada junto a cada nota, leyenda y control
+      Show/Hide, trastes de alto contraste y ataques con separación mínima.
+      Compartido por lectura completa, pantalla completa y Practice. Pendiente
+      de comprobación visual en dispositivo; ver [TAB_READING.md](TAB_READING.md).
+- [ ] Siguiente fase de lectura: notación de duraciones/silencios y técnicas
+      gráficas. No se implementan como parte de la primera entrega PIMA.
+
+### Generación externa de contenido
+
+El flujo preferido es entregar al agente la sesión exportada y
+[CONTENT_AGENT_CONTEXT.md](CONTENT_AGENT_CONTEXT.md), con objetivo y feedback.
+El agente reutiliza la biblioteca y genera material relacionado. Android acepta
+tablaturas v2 individuales, lotes TAB/THEORY y sesiones completas. Library
+Import resources permite archivos múltiples, arrays y paquetes muskopResources v1
+con validación previa y añadido conjunto. Rutinas sueltas y packs de ejercicios
+siguen pendientes. Ver [RESOURCE_IMPORT.md](RESOURCE_IMPORT.md).
+
+Referencias actuales: [AGENTS.md](AGENTS.md), [README.md](README.md),
+[RESOURCE_METADATA.md](RESOURCE_METADATA.md) y [DESIGN_DIRECTION.md](DESIGN_DIRECTION.md).
+
+## Histórico de visión y decisiones de la versión web
+
+El contenido siguiente conserva el plan original y sus fechas. Los hitos web
+marcados como terminados no implican que esas funciones estén migradas a Android.
+
 > Documento de trabajo. Recoge la dirección acordada (2026-07-18) para ir
 > implementándola poco a poco. Actualizar aquí cada decisión nueva.
 

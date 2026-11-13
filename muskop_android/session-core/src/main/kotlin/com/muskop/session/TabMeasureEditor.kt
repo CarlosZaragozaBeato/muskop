@@ -40,9 +40,10 @@ fun updateMeasureNote(
     require(fret == null || fret in 0..24) { "Invalid fret" }
     require(finger == null || finger in setOf("p", "i", "m", "a")) { "Invalid fingering" }
     val events = (measure["events"] as? JsonArray).orEmpty()
-    val event = events.firstOrNull { item ->
-        (item as? JsonObject)?.get("beat")?.jsonPrimitive?.doubleOrNull == beat
-    } as? JsonObject
+    val matchingEvents = events.mapNotNull { it as? JsonObject }.filter {
+        it["beat"]?.jsonPrimitive?.doubleOrNull == beat
+    }
+    val event = matchingEvents.firstOrNull { existingNoteAt(it, string) != null } ?: matchingEvents.firstOrNull()
     val oldNote = existingNoteAt(event ?: JsonObject(emptyMap()), string)
     val notes = (event?.get("notes") as? JsonArray).orEmpty()
         .filterNot { (it as? JsonObject)?.get("string")?.jsonPrimitive?.intOrNull == string }
@@ -54,9 +55,11 @@ fun updateMeasureNote(
             if (finger != null) this["finger"] = JsonPrimitive(finger)
         })
     }
-    val nextEvents = events.filterNot { (it as? JsonObject)?.get("beat")?.jsonPrimitive?.doubleOrNull == beat }.toMutableList()
-    if (notes.isNotEmpty()) {
-        nextEvents += if (event == null) {
+    val nextEvents = events.toMutableList()
+    val eventIndex = events.indexOfFirst { it === event }
+    if (eventIndex >= 0) nextEvents.removeAt(eventIndex)
+    if (notes.isNotEmpty() || event != null) {
+        val updatedEvent = if (event == null) {
             JsonObject(mapOf(
                 "beat" to JsonPrimitive(beat),
                 "duration" to JsonPrimitive("quarter"),
@@ -65,6 +68,7 @@ fun updateMeasureNote(
         } else {
             JsonObject(event.toMutableMap().apply { this["notes"] = JsonArray(notes) })
         }
+        if (eventIndex >= 0) nextEvents.add(eventIndex, updatedEvent) else nextEvents.add(updatedEvent)
     }
     return JsonObject(measure.toMutableMap().apply { this["events"] = JsonArray(nextEvents) })
 }

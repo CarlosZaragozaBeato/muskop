@@ -1,5 +1,11 @@
 # Muskop Front
 
+> **Referencia histórica React/Capacitor.** La implementación activa es Android
+> nativo en `../muskop_android/`. Los comandos y funciones siguientes describen
+> la versión anterior, no el flujo de importación ni la arquitectura actuales.
+> Consulta [README](../README.md), [AGENTS.md](../AGENTS.md) y, para generar
+> contenido a partir de una sesión, [CONTENT_AGENT_CONTEXT.md](../CONTENT_AGENT_CONTEXT.md).
+
 Muskop (rutinas de guitarra) — React + TypeScript + Vite. **Local-first**: no
 hay backend; los datos viven en **sesiones**, archivos `.muskop.json` que se
 guardan en el dispositivo (IndexedDB) y se pueden descargar/importar (ver

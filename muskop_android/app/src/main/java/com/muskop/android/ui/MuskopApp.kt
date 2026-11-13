@@ -45,7 +45,11 @@ import com.muskop.android.progress.ProgressScreen
 import com.muskop.android.session.SessionUiState
 import com.muskop.session.ActivePracticeSnapshot
 import com.muskop.session.PracticeEntryInput
+import com.muskop.session.PracticeGoals
+import com.muskop.session.ResourceImportBatch
 import com.muskop.session.ResourceEditorInput
+import com.muskop.session.ResourceOrganizationUpdate
+import com.muskop.session.ResourceLearningUpdate
 import com.muskop.session.RoutineEditorInput
 import com.muskop.session.SessionDocument
 
@@ -65,33 +69,44 @@ fun MuskopApp(
     onImportSession: () -> Unit,
     onExportSession: () -> Unit,
     onRetry: () -> Unit,
-    onRecordPractice: (PracticeEntryInput) -> Unit,
+    onRecordPractice: (PracticeEntryInput, (Result<Unit>) -> Unit) -> Unit,
+    onReviewResourceLearning: (String, ResourceLearningUpdate, (Result<Unit>) -> Unit) -> Unit,
     onSaveActivePractice: (ActivePracticeSnapshot) -> Unit,
     onClearActivePractice: () -> Unit,
     onSaveRoutine: (RoutineEditorInput) -> Unit,
+    onDeleteRoutine: (String) -> Unit,
+    onSavePracticeGoals: (PracticeGoals) -> Unit,
     onSaveResource: (ResourceEditorInput) -> Unit,
+    onImportResources: (ResourceImportBatch, (Result<Int>) -> Unit) -> Unit,
+    onDeleteResource: (String) -> Unit,
+    onUpdateResourceLearning: (String, ResourceLearningUpdate) -> Unit,
+    onUpdateResourceOrganization: (String, ResourceOrganizationUpdate) -> Unit,
 ) {
     var destination by rememberSaveable { mutableStateOf(Destination.Home) }
     var pendingPractice by rememberSaveable { mutableStateOf<String?>(null) }
+    var practiceUiActive by remember { mutableStateOf(false) }
+    val practiceMode = practiceUiActive && destination == Destination.Routines && state is SessionUiState.Ready
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Image(
-                        painter = painterResource(
-                            if (isSystemInDarkTheme()) R.drawable.muskop_logo_dark
-                            else R.drawable.muskop_logo_light,
-                        ),
-                        contentDescription = "Muskop",
-                        modifier = Modifier.height(32.dp),
-                        contentScale = ContentScale.Fit,
-                    )
-                },
-            )
+            if (!practiceMode) {
+                TopAppBar(
+                    title = {
+                        Image(
+                            painter = painterResource(
+                                if (isSystemInDarkTheme()) R.drawable.muskop_logo_dark
+                                else R.drawable.muskop_logo_light,
+                            ),
+                            contentDescription = "Muskop",
+                            modifier = Modifier.height(32.dp),
+                            contentScale = ContentScale.Fit,
+                        )
+                    },
+                )
+            }
         },
         bottomBar = {
-            if (state is SessionUiState.Ready) {
+            if (state is SessionUiState.Ready && !practiceMode) {
                 NavigationBar {
                     Destination.entries.forEach { item ->
                         NavigationBarItem(
@@ -118,13 +133,21 @@ fun MuskopApp(
                     destination = Destination.Routines
                 },
                 onPracticeConsumed = { pendingPractice = null },
+                onPracticeModeChanged = { practiceUiActive = it },
                 onImportSession = onImportSession,
                 onExportSession = onExportSession,
                 onRecordPractice = onRecordPractice,
+                onReviewResourceLearning = onReviewResourceLearning,
                 onSaveActivePractice = onSaveActivePractice,
                 onClearActivePractice = onClearActivePractice,
                 onSaveRoutine = onSaveRoutine,
+                onDeleteRoutine = onDeleteRoutine,
+                onSavePracticeGoals = onSavePracticeGoals,
                 onSaveResource = onSaveResource,
+                onImportResources = onImportResources,
+                onDeleteResource = onDeleteResource,
+                onUpdateResourceLearning = onUpdateResourceLearning,
+                onUpdateResourceOrganization = onUpdateResourceOrganization,
             )
             is SessionUiState.Error -> ErrorContent(padding, state, onImportSession, onRetry)
         }
@@ -139,13 +162,21 @@ private fun DestinationContent(
     pendingPractice: String?,
     onStartPractice: (String) -> Unit,
     onPracticeConsumed: () -> Unit,
+    onPracticeModeChanged: (Boolean) -> Unit,
     onImportSession: () -> Unit,
     onExportSession: () -> Unit,
-    onRecordPractice: (PracticeEntryInput) -> Unit,
+    onRecordPractice: (PracticeEntryInput, (Result<Unit>) -> Unit) -> Unit,
+    onReviewResourceLearning: (String, ResourceLearningUpdate, (Result<Unit>) -> Unit) -> Unit,
     onSaveActivePractice: (ActivePracticeSnapshot) -> Unit,
     onClearActivePractice: () -> Unit,
     onSaveRoutine: (RoutineEditorInput) -> Unit,
+    onDeleteRoutine: (String) -> Unit,
+    onSavePracticeGoals: (PracticeGoals) -> Unit,
     onSaveResource: (ResourceEditorInput) -> Unit,
+    onImportResources: (ResourceImportBatch, (Result<Int>) -> Unit) -> Unit,
+    onDeleteResource: (String) -> Unit,
+    onUpdateResourceLearning: (String, ResourceLearningUpdate) -> Unit,
+    onUpdateResourceOrganization: (String, ResourceOrganizationUpdate) -> Unit,
 ) {
     when (destination) {
         Destination.Home -> HomeScreen(session, padding, onStartPractice)
@@ -154,13 +185,16 @@ private fun DestinationContent(
             padding = padding,
             initialTarget = pendingPractice,
             onInitialTargetConsumed = onPracticeConsumed,
+            onPracticeModeChanged = onPracticeModeChanged,
             onRecordPractice = onRecordPractice,
+            onReviewResourceLearning = onReviewResourceLearning,
             onSaveActive = onSaveActivePractice,
             onClearActive = onClearActivePractice,
             onSaveRoutine = onSaveRoutine,
+            onDeleteRoutine = onDeleteRoutine,
         )
-        Destination.Library -> LibraryScreen(session, padding, onSaveResource)
-        Destination.Progress -> ProgressScreen(session, padding)
+        Destination.Library -> LibraryScreen(session, padding, onSaveResource, onDeleteResource, onUpdateResourceLearning, onUpdateResourceOrganization, onImportResources)
+        Destination.Progress -> ProgressScreen(session, padding, onSavePracticeGoals)
         Destination.Settings -> SettingsScreen(session, padding, onImportSession, onExportSession)
     }
 }

@@ -1,21 +1,39 @@
 package com.muskop.android.progress
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.muskop.session.PracticeGoals
 import com.muskop.session.PracticeLogEntry
@@ -25,97 +43,244 @@ import com.muskop.session.practiceEntries
 import com.muskop.session.practiceGoals
 import com.muskop.session.routines
 import com.muskop.session.skillGoals
+import com.muskop.session.totalWholeMinutes
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
 @Composable
-fun ProgressScreen(session: SessionDocument, padding: PaddingValues) {
+fun ProgressScreen(
+    session: SessionDocument,
+    padding: PaddingValues,
+    onSavePracticeGoals: (PracticeGoals) -> Unit,
+) {
     val entries = remember(session) { session.practiceEntries() }
     val routines = remember(session) { session.routines() }
     val snapshot = remember(entries, routines, session) {
         ProgressSnapshot.from(entries, routines, session.practiceGoals(), session.skillGoals())
     }
+    val trends = remember(entries) { PracticeTrends.from(entries) }
+    val largeText = LocalDensity.current.fontScale >= 1.5f
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(padding),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        item { Text("Progress", style = MaterialTheme.typography.headlineMedium) }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricCard("Total", "${snapshot.totalMinutes} min", Modifier.weight(1f))
-                MetricCard("Week", "${snapshot.weekMinutes} min", Modifier.weight(1f))
-                MetricCard("Streak", "${snapshot.streak} days", Modifier.weight(1f))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SectionTitle("Progress", screenTitle = true)
+                Text("Your time and practice habits", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        item { GoalsCard(snapshot.goals, snapshot.weekMinutes, snapshot.monthMinutes, snapshot.yearMinutes) }
+        item {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Metric("Total practice", practiceTime(snapshot.totalMinutes), prominent = true)
+                    if (largeText) {
+                        Metric("This week", practiceTime(snapshot.weekMinutes))
+                        Metric("Current streak", "${snapshot.streak} days")
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Metric("This week", practiceTime(snapshot.weekMinutes), Modifier.weight(1f))
+                            Metric("Current streak", "${snapshot.streak} days", Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+        if (entries.isEmpty()) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Every practice counts")
+                    Text("Finish and save a practice to start building your history.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SectionTitle("Last 7 days")
+                WeekActivity(snapshot.lastDays.asReversed())
+            }
+        }
+        item { PracticeTrendsSection(trends) }
+        item { GoalsCard(snapshot.goals, snapshot.weekMinutes, snapshot.monthMinutes, snapshot.yearMinutes, onSavePracticeGoals) }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SectionTitle("Practice by skill")
+                Text("Time logged across all your practice", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (entries.any { it.skillMinutes.isEmpty() }) {
+                    Text("Older entries without skill details use the current routine blocks.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
         snapshot.focusSkill?.let { (skill, minutes) ->
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Next focus", style = MaterialTheme.typography.titleLarge)
-                        Text("Work on ${skillLabel(skill)}: you have logged $minutes min.")
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val hasGoalGap = (snapshot.skillGoals[skill] ?: 0) > minutes
+                    Text(if (hasGoalGap) "Largest gap to a skill goal" else "Least logged of your practiced skills",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${skillLabel(skill)} · ${practiceTime(minutes)}", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
-        item { Text("By skill", style = MaterialTheme.typography.titleLarge) }
         if (snapshot.skillMinutes.isEmpty()) {
-            item { Text("There is no practice time to analyze yet.") }
+            item { Text("No practice time by skill yet.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         items(snapshot.skillMinutes.toList(), key = { it.first }) { (skill, minutes) ->
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column {
-                        Text(skillLabel(skill), fontWeight = FontWeight.SemiBold)
-                        snapshot.skillGoals[skill]?.let { goal -> Text("Goal: $minutes / $goal min") }
+            Card(modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(skillLabel(skill), style = MaterialTheme.typography.titleMedium)
+                    Text(practiceTime(minutes), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    val target = snapshot.skillGoals[skill]?.takeIf { it > 0 }
+                    if (target != null) {
+                        Text("Goal: $minutes / $target min", style = MaterialTheme.typography.bodySmall)
                     }
-                    Text("$minutes min")
+                    val denominator = target ?: snapshot.skillMinutes.values.sum().coerceAtLeast(1)
+                    if (target == null) {
+                        Text("${(minutes.toFloat() / denominator * 100).toInt()}% of logged skill time",
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                    TimeProgress(minutes, denominator)
                 }
             }
         }
-        item { Text("Recent days", style = MaterialTheme.typography.titleLarge) }
-        items(snapshot.lastDays, key = { it.date }) { day ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(day.date)
-                Text("${day.minutes} min")
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String, screenTitle: Boolean = false) {
+    Text(text, style = if (screenTitle) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+        modifier = Modifier.semantics { heading() })
+}
+
+@Composable
+private fun Metric(label: String, value: String, modifier: Modifier = Modifier, prominent: Boolean = false) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = if (prominent) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge)
+    }
+}
+
+@Composable
+private fun WeekActivity(days: List<DayMinutes>) {
+    val maxMinutes = days.maxOfOrNull { it.minutes }?.coerceAtLeast(1) ?: 1
+    val largeText = LocalDensity.current.fontScale >= 1.3f
+    Card(modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+        if (largeText) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                days.forEach { day ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("${dayLabel(day.date, "EEE, MMM d")} · ${day.minutes} min",
+                            style = MaterialTheme.typography.bodyMedium)
+                        TimeProgress(day.minutes, maxMinutes)
+                    }
+                }
             }
+        } else {
+            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                days.forEach { day ->
+                    Column(
+                        Modifier.weight(1f).clearAndSetSemantics {
+                            contentDescription = "${day.date}: ${day.minutes} minutes"
+                        },
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("${day.minutes}", style = MaterialTheme.typography.bodySmall)
+                        Box(Modifier.fillMaxWidth().height(72.dp).clip(MaterialTheme.shapes.small)
+                            .background(MaterialTheme.colorScheme.outlineVariant), contentAlignment = Alignment.BottomCenter) {
+                            Box(Modifier.fillMaxWidth().fillMaxHeight((day.minutes.toFloat() / maxMinutes).coerceIn(0f, 1f))
+                                .background(MaterialTheme.colorScheme.primary))
+                        }
+                        Text(dayLabel(day.date, "EEE"), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            Text("Minutes per day · ${dayLabel(days.first().date, "MMM d")} – ${dayLabel(days.last().date, "MMM d")}",
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun MetricCard(label: String, value: String, modifier: Modifier) {
-    Card(modifier = modifier) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(label, style = MaterialTheme.typography.labelMedium)
-        }
+private fun GoalsCard(
+    goals: PracticeGoals,
+    week: Int,
+    month: Int,
+    year: Int,
+    onSavePracticeGoals: (PracticeGoals) -> Unit,
+) {
+    var showMore by rememberSaveable { mutableStateOf(false) }
+    var editing by rememberSaveable { mutableStateOf(false) }
+    if (editing) {
+        PracticeGoalsEditor(goals, onDismiss = { editing = false }, onSave = {
+            onSavePracticeGoals(it)
+            editing = false
+        })
     }
-}
-
-@Composable
-private fun GoalsCard(goals: PracticeGoals, week: Int, month: Int, year: Int) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Goals", style = MaterialTheme.typography.titleLarge)
-            GoalLine("Week", week, goals.weekly)
-            GoalLine("Month", month, goals.monthly)
-            GoalLine("Year", year, goals.yearly)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            SectionTitle("Practice goals")
+            TextButton(onClick = { editing = true }) { Text("Edit goals") }
+        }
+        Card(modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                GoalLine("This week", week, goals.weekly)
+                if (showMore) {
+                    GoalLine("This month", month, goals.monthly)
+                    GoalLine("This year", year, goals.yearly)
+                }
+                TextButton(onClick = { showMore = !showMore },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) {
+                    Text(if (showMore) "Less detail" else "Monthly and yearly goals")
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun GoalLine(label: String, current: Int, target: Int) {
-    val text = if (target > 0) "$current / $target min" else "$current min · no goal"
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label)
-        Text(text)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.titleMedium)
+        Text(if (target > 0) "$current / $target min${if (current >= target) " · Reached" else ""}" else "$current min · No goal set",
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (target > 0) TimeProgress(current, target)
     }
 }
+
+@Composable
+private fun TimeProgress(current: Int, target: Int) {
+    LinearProgressIndicator(
+        progress = { (current.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f) },
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primary,
+        trackColor = MaterialTheme.colorScheme.outlineVariant,
+    )
+}
+
+private fun practiceTime(minutes: Int): String = when {
+    minutes < 60 -> "$minutes min"
+    minutes % 60 == 0 -> "${minutes / 60} h"
+    else -> "${minutes / 60} h ${minutes % 60} min"
+}
+
+private fun dayLabel(date: String, pattern: String): String = runCatching {
+    val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date) ?: return@runCatching date
+    SimpleDateFormat(pattern, Locale.US).format(parsed)
+}.getOrDefault(date)
 
 private data class DayMinutes(val date: String, val minutes: Int)
 
@@ -138,7 +303,8 @@ private data class ProgressSnapshot(
             goals: PracticeGoals,
             skillGoals: Map<String, Int>,
         ): ProgressSnapshot {
-            val totalsByDay = entries.groupBy(PracticeLogEntry::date).mapValues { (_, day) -> day.sumOf(PracticeLogEntry::minutes) }
+            val totalsByDay = entries.groupBy(PracticeLogEntry::date)
+                .mapValues { (_, day) -> day.totalWholeMinutes() }
             val now = Calendar.getInstance()
             val today = dateKey(now)
             val weekStart = weekStart(now)
@@ -146,10 +312,10 @@ private data class ProgressSnapshot(
             val yearPrefix = today.take(4)
             val skillMinutes = resolvedSkills(entries, routines)
             return ProgressSnapshot(
-                totalMinutes = entries.sumOf(PracticeLogEntry::minutes),
-                weekMinutes = entries.filter { it.date in weekStart..today }.sumOf(PracticeLogEntry::minutes),
-                monthMinutes = entries.filter { it.date.startsWith(monthPrefix) && it.date <= today }.sumOf(PracticeLogEntry::minutes),
-                yearMinutes = entries.filter { it.date.startsWith(yearPrefix) && it.date <= today }.sumOf(PracticeLogEntry::minutes),
+                totalMinutes = entries.totalWholeMinutes(),
+                weekMinutes = entries.filter { it.date in weekStart..today }.totalWholeMinutes(),
+                monthMinutes = entries.filter { it.date.startsWith(monthPrefix) && it.date <= today }.totalWholeMinutes(),
+                yearMinutes = entries.filter { it.date.startsWith(yearPrefix) && it.date <= today }.totalWholeMinutes(),
                 streak = streak(totalsByDay.keys, now),
                 goals = goals,
                 skillGoals = skillGoals,
